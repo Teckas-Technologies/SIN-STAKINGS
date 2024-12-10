@@ -1,18 +1,19 @@
-"use client";
-import Body from "@/Components/Home/Body";
-import Header from "@/Components/Header/Header";
 import Footer from "@/Components/Footer/Footer";
+import Header from "@/Components/Header/Header";
+import StakeSection from "@/Components/Stake/Stake";
+import React from "react";
 
-
-export default function Home() {
+const page = () => {
   return (
     <div
       className="bg-cover bg-center min-h-screen"
       style={{ backgroundImage: "url('/images/bg.png')" }}
     >
       <Header />
-      <Body />
+      <StakeSection />
       <Footer/>
     </div>
   );
-}
+};
+
+export default page;

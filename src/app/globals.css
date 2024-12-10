@@ -19,3 +19,25 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+@font-face {
+  font-family: 'saved-zero';
+  src: url(/Fonts/font/saved\ by\ zero\ rg.ttf);
+}
+
+
+
+
+@font-face {
+  font-family: 'Garet-book';
+  src: url(/Fonts/font/Garet-Book.ttf);
+}
+
+@font-face {
+  font-family: 'montserrat-variablefont';
+  src: url(/Fonts/font/Montserrat-VariableFont_wght.ttf);
+}
+
+@font-face {
+  font-family: 'montserrat-italic';
+  src: url(/Fonts/font/Montserrat-Italic-VariableFont_wght.ttf);
+}
