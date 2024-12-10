@@ -4,7 +4,6 @@ import { useSinBalance } from "@/hooks/fetchSinBalance";
 import { NearContext } from "@/wallet/WallletSelector";
 import { useSearchParams } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
-
 export default function StakeSection() {
   const { wallet, signedAccountId } = useContext(NearContext);
   const { balance, error } = useSinBalance({ wallet, signedAccountId });

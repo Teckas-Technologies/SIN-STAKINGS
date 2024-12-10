@@ -75,7 +75,6 @@ const Body = () => {
           </button>
         </div>
       )}
-
       {/* <div className="flex flex-row items-center justify-center mt-5 px-6 py-3 bg-[#f8b12c] rounded-full md:w-[500px]">
         <span className="text-lg font-bold text-[#353333] uppercase">
           CONNECT

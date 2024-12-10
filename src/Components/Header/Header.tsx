@@ -2,8 +2,6 @@
 import './Header.css'
 import { usePathname } from "next/navigation";
 import Link from 'next/link';
-
-
 const Header = () => {
   const pathname = usePathname();
 

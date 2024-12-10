@@ -17,7 +17,7 @@ export default function NFTStakeSection() {
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center justify-center mt-[100px]">
-     {signedAccountId ? (
+      {signedAccountId ? (
         <div className="w-[90%] md:w-[500px]">
           {" "}
           <div className="flex flex-row items-center justify-between mt-10 px-6 py-3 bg-[#f8b12c] rounded-full md:w-[500px]">
@@ -76,11 +76,7 @@ export default function NFTStakeSection() {
             {totalTokensStaked}
           </span>
         </div>
-
-        {/* Vertical line for md and above */}
         <div className="hidden md:block h-12 w-[1px] bg-yellow-400"></div>
-
-        {/* Horizontal line for sm screens */}
         <div className="block md:hidden w-full h-[1px] bg-yellow-400"></div>
 
         <div className="flex flex-col items-center gap-2">
