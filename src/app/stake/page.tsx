@@ -1,7 +1,7 @@
 import Footer from "@/Components/Footer/Footer";
 import Header from "@/Components/Header/Header";
 import StakeSection from "@/Components/Stake/Stake";
-import React from "react";
+import React, { Suspense } from "react";
 
 const page = () => {
   return (
@@ -10,8 +10,10 @@ const page = () => {
       style={{ backgroundImage: "url('/images/bg.png')" }}
     >
       <Header />
-      <StakeSection />
-      <Footer/>
+      <Suspense fallback={<div>Loading...</div>}>
+        <StakeSection />
+      </Suspense>
+      <Footer />
     </div>
   );
 };

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { FinalExecutionOutcome, WalletSelector, WalletSelectorState } from '@near-wallet-selector/core';
 import '@near-wallet-selector/modal-ui/styles.css';
 import { setupWalletSelector } from '@near-wallet-selector/core';
