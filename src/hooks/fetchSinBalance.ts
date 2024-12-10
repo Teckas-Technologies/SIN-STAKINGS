@@ -36,3 +36,4 @@ export const useSinBalance = ({ wallet, signedAccountId }: UseSinBalanceProps) =
 
   return { balance, error };
 };
+
