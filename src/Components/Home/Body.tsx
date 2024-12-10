@@ -21,7 +21,7 @@ const Body = () => {
   const handleNavigationToNFTStaking = () => {
     router.push("/stake?tab=STAKE_NFT");
   };
-  
+
   return (
     <div
       className="flex flex-col items-center min-h-screen text-white mt-[100px]"
@@ -53,25 +53,25 @@ const Body = () => {
             >
               SIN BALANCE
             </span>
-           
-              <span
-                className="font-medium md:text-lg text-sm text-black"
-                style={{ fontFamily: "montserrat-variablefont" }}
-              >
-                {balance}
-              </span>
-            
+
+            <span
+              className="font-medium md:text-lg text-sm text-black"
+              style={{ fontFamily: "montserrat-variablefont" }}
+            >
+              {balance}
+            </span>
           </div>
         </div>
       ) : (
-        <div className="w-[90%] md:w-[500px]" onClick={handleSignIn}>
-          <button className="flex flex-row items-center justify-center mt-10 px-6 py-3 bg-[#f8b12c] rounded-full md:w-[500px]">
-            <span
-              className="md:text-lg text-sm font-bold text-[#353333] uppercase"
-              style={{ fontFamily: "montserrat-variablefont" }}
-            >
-              CONNECT
-            </span>
+        <div
+          className="w-[95%] md:w-[500px] flex items-center justify-center"
+          onClick={handleSignIn}
+        >
+          <button
+            className="mt-10 px-6 py-3 bg-[#f8b12c] rounded-full w-[90%] md:w-[500px] md:text-lg text-sm font-bold text-[#353333] uppercase"
+            style={{ fontFamily: "montserrat-variablefont" }}
+          >
+            CONNECT
           </button>
         </div>
       )}

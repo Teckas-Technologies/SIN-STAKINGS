@@ -24,7 +24,7 @@ const Header = () => {
         </Link>
 
         <div className="flex items-center space-x-8">
-          <nav className="flex space-x-6">
+          <nav className="flex md:space-x-6 space-x-4">
             {nav.map((link) => (
               <a
                 key={link.id}
@@ -35,7 +35,7 @@ const Header = () => {
                     : "text-[#eeb636]"
                 } hover:text-[#FFB742] transition-all duration-300`}
               >
-                <img src={link.icon} alt={`${link.label} Icon`} className="md:w-10 md:h-10 w-8 h-8" />
+                <img src={link.icon} alt={`${link.label} Icon`} className="md:w-10 md:h-10 w-6 h-6" />
                <span className="text-[10px]" style={{fontFamily:'Garet-book'}}>{link.label}</span> 
               </a>
             ))}
