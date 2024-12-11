@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { SIN_STAKING_CONTRACT } from "@/config/constants";
 import { NearContext, Wallet } from "@/wallet/WallletSelector";
-
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
