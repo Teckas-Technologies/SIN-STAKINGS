@@ -2,6 +2,7 @@ import Footer from "@/Components/Footer/Footer";
 import Header from "@/Components/Header/Header";
 import StakeSection from "@/Components/Stake/Stake";
 import React, { Suspense } from "react";
+import { Toaster } from "react-hot-toast";
 
 const page = () => {
   return (
@@ -14,6 +15,7 @@ const page = () => {
         <StakeSection />
       </Suspense>
       <Footer />
+      <Toaster /> 
     </div>
   );
 };

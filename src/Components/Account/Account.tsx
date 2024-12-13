@@ -1,25 +1,43 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+import { SIN_STAKING_CONTRACT_NFT_STAKE } from "@/config/constants";
 import { useSinBalance } from "@/hooks/fetchSinBalance";
+import { useStakingInfo } from "@/hooks/viewStakingToken";
 import { NearContext } from "@/wallet/WallletSelector";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
+import Loader from "../Loader/Loader";
+
+// Function to convert yocto-units to NEAR and format it
+function formatYoctoAmount(amountYocto: string) {
+  // Convert yocto-units to NEAR (or the token's base unit)
+  const amountBase = Number(amountYocto) / Math.pow(10, 24);
+
+  // Format with two decimal places for readability
+  return amountBase.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 export default function NFTStakeSection() {
   const { wallet, signedAccountId } = useContext(NearContext);
-  const { balance, error } = useSinBalance({ wallet, signedAccountId });
+  const { balance} = useSinBalance({ wallet, signedAccountId });
+  const { stakingInfo,fetchStakingInfo} = useStakingInfo(wallet, SIN_STAKING_CONTRACT_NFT_STAKE);
   const handleSignIn = async () => {
     return wallet?.signIn();
   };
   const handleSignout = async () => {
     return wallet?.signOut();
   };
-  const totalTokensStaked = "25,00000000";
+
+  const totalTokensStaked = stakingInfo?.amount ? formatYoctoAmount(stakingInfo.amount) : <Loader/>; 
   const totalNFTsStaked = 5;
+
+  useEffect(() => {
+    if (signedAccountId) {
+      fetchStakingInfo(signedAccountId);
+    }
+  }, [signedAccountId]);
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center justify-center mt-[100px]">
       {signedAccountId ? (
         <div className="w-[90%] md:w-[500px]">
-          {" "}
           <div className="flex flex-row items-center justify-between mt-10 px-6 py-3 bg-[#f8b12c] rounded-full md:w-[500px]">
             <span
               className="md:text-lg text-sm font-bold text-[#353333] uppercase cursor-pointer"
@@ -53,16 +71,16 @@ export default function NFTStakeSection() {
         </div>
       ) : (
         <div
-        className="w-[95%] md:w-[500px] flex items-center justify-center"
-        onClick={handleSignIn}
-      >
-        <button
-          className="mt-10 px-6 py-3 bg-[#f8b12c] rounded-full w-[90%] md:w-[500px] md:text-lg text-sm font-bold text-[#353333] uppercase"
-          style={{ fontFamily: "montserrat-variablefont" }}
+          className="w-[95%] md:w-[500px] flex items-center justify-center"
+          onClick={handleSignIn}
         >
-          CONNECT
-        </button>
-      </div>
+          <button
+            className="mt-10 px-6 py-3 bg-[#f8b12c] rounded-full w-[90%] md:w-[500px] md:text-lg text-sm font-bold text-[#353333] uppercase"
+            style={{ fontFamily: "montserrat-variablefont" }}
+          >
+            CONNECT
+          </button>
+        </div>
       )}
 
       <div

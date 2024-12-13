@@ -1,0 +1,29 @@
+/* Hide the default scrollbar */
+.container::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Custom scrollbar style */
+  .container {
+    -ms-overflow-style: none;  /* For Internet Explorer 10+ */
+    scrollbar-width: none;      /* For Firefox */
+  }
+  
+  /* Custom scrollbar style for Webkit browsers (Chrome, Safari, etc.) */
+  .container::-webkit-scrollbar {
+    width: 8px;  /* Adjust the width of the scrollbar */
+  }
+  
+  /* Thumb of the scrollbar */
+  .container::-webkit-scrollbar-thumb {
+    background-color: #eeb636;  /* Color of the scrollbar thumb */
+    border-radius: 10px;        /* Round corners */
+    border: 2px solid #3b2d2f;  /* Border around the thumb */
+  }
+  
+  /* Track of the scrollbar */
+  .container::-webkit-scrollbar-track {
+    background: #3b2d2f;  /* Background color of the track */
+    border-radius: 10px;
+  }
+  
