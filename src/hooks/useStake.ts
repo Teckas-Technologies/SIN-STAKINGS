@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { Wallet } from "@/wallet/WallletSelector";
 import { utils } from "near-api-js"; // Utility functions for NEAR amounts
+import { SIN_STAKING_CONTRACT_STAKE_INFO } from "@/config/constants";
 
 export const useStake = (wallet: Wallet | undefined, contractId: string) => {
   const stake = useCallback(
@@ -11,30 +12,30 @@ export const useStake = (wallet: Wallet | undefined, contractId: string) => {
 
       try {
         // Convert the entered amount from NEAR to yoctoNEAR
-        const yoctoAmount = utils.format.parseNearAmount(amount); 
+        const yoctoAmount = utils.format.parseNearAmount(amount);
         console.log("yocto>>", yoctoAmount);
-        
+
         if (!yoctoAmount) {
           throw new Error("Invalid amount entered");
         }
 
-        // Convert lock-up period to the desired format (e.g., seconds or milliseconds)
-        const lockupPeriodInSeconds = lockupPeriodInDays * 24 * 60 * 60;
-
+       
+        const msg = JSON.stringify({ lockup_days: lockupPeriodInDays });
         // Call the smart contract method
+        const callbackUrl = `${window.location.origin}/stake?isStake=true&senderId=${encodeURIComponent(senderId)}`;
         const result = await wallet.callMethod({
           contractId,
-          method: "stake",
+          callbackUrl,
+          method: "ft_transfer_call",
           args: {
-            sender_id: senderId,
-            amount: yoctoAmount,
-            lockup_period: lockupPeriodInSeconds, // Pass lock-up period
-            msg: "Staking SIN tokens with lock-up period",
+            receiver_id: SIN_STAKING_CONTRACT_STAKE_INFO, // Specify the receiver contract account
+            amount: yoctoAmount, // Amount to transfer
+            msg,
           },
-          gas: "300000000000000", 
-          deposit: "1", 
+          gas: "300000000000000",
+          deposit: "1",
         });
-console.log("useStake ",result);
+        console.log("useStake ", result);
 
         return result;
       } catch (error) {

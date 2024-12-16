@@ -2,8 +2,10 @@
 import { useState, useCallback } from "react";
 import { Wallet } from "@/wallet/WallletSelector";
 
-
-export const useStakingInfo = (wallet: Wallet | undefined, contractId: string) => {
+export const useStakingInfo = (
+  wallet: Wallet | undefined,
+  contractId: string
+) => {
   const [stakingInfo, setStakingInfo] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,15 +20,14 @@ export const useStakingInfo = (wallet: Wallet | undefined, contractId: string) =
       setError(null);
 
       try {
-       
         const result = await wallet.viewMethod({
           contractId,
-          method: "get_user_staking_info", 
+          method: "get_staking_info",
           args: {
-            account_id: accountId, 
+            staker_id: accountId,
           },
         });
-console.log("result",result);
+        console.log("result", result);
 
         setStakingInfo(result);
       } catch (err) {

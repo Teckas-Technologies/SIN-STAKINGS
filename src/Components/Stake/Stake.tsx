@@ -7,11 +7,15 @@ import { NearContext } from "@/wallet/WallletSelector";
 import { useSearchParams } from "next/navigation";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
-import { useStakingInfo } from "@/hooks/viewStakingToken";
+
 import useFetchNFTMedia from "@/hooks/useFeed";
 import "./Stake.css";
 import Loader from "../Loader/Loader";
-import { SIN_STAKING_CONTRACT_NFT_STAKE } from "@/config/constants";
+import {
+  SIN_STAKING_CONTRACT_NFT_STAKE,
+  SIN_STAKING_CONTRACT_STAKE_INFO,
+} from "@/config/constants";
+import { useStakingInfo } from "@/hooks/viewStakingToken";
 export default function StakeSection() {
   const { wallet, signedAccountId } = useContext(NearContext);
   const { balance } = useSinBalance({ wallet, signedAccountId });
@@ -26,14 +30,10 @@ export default function StakeSection() {
     "stake"
   );
   const [amount, setAmount] = useState<string>("");
-  const [isClaiming, setIsClaiming] = useState(false);
-  const { claimRewards } = useClaimRewards(
-    wallet,
-    "sin-contract-account10.testnet"
-  );
+
   const { stakingInfo, fetchStakingInfo } = useStakingInfo(
     wallet,
-    "sin-contract-account10.testnet"
+    SIN_STAKING_CONTRACT_STAKE_INFO
   );
   const nft_contract_id = SIN_STAKING_CONTRACT_NFT_STAKE;
   const { nfts, loading, error, fetchNFTData, hasMore } = useFetchNFTMedia({
@@ -50,7 +50,6 @@ export default function StakeSection() {
         containerRef.current.scrollTop + containerRef.current.clientHeight;
 
       if (bottom && !loading && hasMore) {
-      
         fetchNFTData();
       }
     }
@@ -62,28 +61,29 @@ export default function StakeSection() {
       currentContainer.addEventListener("scroll", handleScroll);
     }
 
-    
     return () => {
       if (currentContainer) {
         currentContainer.removeEventListener("scroll", handleScroll);
       }
     };
   }, [fetchNFTData, loading, hasMore]);
-  const { stake } = useStake(wallet, "sin-contract-account10.testnet");
+  const { stake } = useStake(wallet, "sin-test-tkn.testnet");
+
   const handleStake = async () => {
+    // Validate the entered amount
     if (!amount || isNaN(parseFloat(amount))) {
       toast.error("Please enter a valid amount.");
       return;
     }
 
+    // Validate that a lock-up period is selected
     if (!selectedPeriod) {
-      toast.error("Please select a lock-up period."); 
+      toast.error("Please select a lock-up period.");
       return;
     }
 
     try {
-    
-      console.log("Selected lock-up period:", selectedPeriod);
+      // Map the selected period to lockup days
       const lockupDays = {
         "1-Month": 30,
         "3-Month": 90,
@@ -91,11 +91,19 @@ export default function StakeSection() {
         "9-Month": 270,
       }[selectedPeriod];
 
+      if (!lockupDays) {
+        toast.error("Invalid lock-up period selected.");
+        return;
+      }
+
+      // Call the stake function with the correct arguments
       await stake(amount, signedAccountId, lockupDays);
+
+      // If staking is successful, show success message
       toast.success("Staking successful!");
     } catch (error) {
       console.error("Error staking:", error);
-      toast.error("Staking failed. Please try again."); 
+      toast.error("Staking failed. Please try again.");
     }
   };
 
@@ -145,57 +153,10 @@ export default function StakeSection() {
     return null; // Render nothing until it's on the client.
   }
 
-  const handleClaim = async () => {
-    if (isClaiming) return;
-
-    if (!stakingInfo) {
-      toast.error("No staking information available.");
-      return;
-    }
-
-    const lockupEndDate = new Date(
-      (stakingInfo.start_time + stakingInfo.lockup_duration) * 1000
-    );
-    console.log("lock up ", lockupEndDate);
-
-    const currentDate = new Date();
-    console.log("current ", currentDate);
-
-    const lockupDurationMonths = Math.ceil(
-      stakingInfo.lockup_duration / (60 * 60 * 24 * 30)
-    );
-
-    if (currentDate < lockupEndDate) {
-      const diffInMs = lockupEndDate.getTime() - currentDate.getTime();
-
-      const formattedLockupEndDate = lockupEndDate.toLocaleDateString("en-US", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-
-      toast.error(
-        `You are in the lock-up period of ${lockupDurationMonths} month(s). Rewards can only be claimed after ${formattedLockupEndDate}.`
-      );
-      return;
-    }
-
-    setIsClaiming(true);
-    try {
-      await claimRewards();
-      toast.success("Rewards claimed successfully!");
-    } catch (error) {
-      console.error("Error claiming rewards:", error);
-      toast.error("Failed to claim rewards. Please try again.");
-    } finally {
-      setIsClaiming(false);
-    }
-  };
-
   return (
     <div className="min-h-screen text-white flex flex-col items-center justify-center px-2 py-10 mt-[100px]">
       {signedAccountId ? (
-        <div className="w-[90%] md:w-[500px]">
+        <div className="w-[95%] md:w-[500px]">
           {" "}
           <div className="flex flex-row items-center justify-between mt-10 px-6 py-3 bg-[#f8b12c] rounded-full md:w-[500px]">
             <span
@@ -373,21 +334,6 @@ export default function StakeSection() {
                 </button>
               </div>
             </div>
-            <button
-              onClick={handleClaim}
-              className={`bg-yellow-500 text-[#3b2d2f] md:text-sm text-xs font-bold md:px-[50px] px-[20px] py-2 flex items-center justify-center rounded-full shadow-md ${
-                isClaiming
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-yellow-600"
-              }`}
-              style={{
-                margin: "0 auto",
-                marginTop: "20px",
-                fontFamily: "montserrat-variablefont",
-              }}
-            >
-              {isClaiming ? "Claiming..." : "Claim Rewards"}
-            </button>
           </>
         )}
         {currentTab === "STAKE_NFT" && (
@@ -493,7 +439,7 @@ export default function StakeSection() {
               className="flex flex-row items-center justify-between"
               style={{ fontFamily: "montserrat-variablefont" }}
             >
-              <button className="bg-yellow-500 text-[#3b2d2f] font-bold w-[100px] md:text-sm text-xs py-2 rounded-full shadow-md hover:bg-yellow-600">
+              <button className="bg-yellow-500 text-[#3b2d2f] font-bold px-4  md:text-sm text-xs py-2 rounded-full shadow-md hover:bg-yellow-600">
                 {activeSection === "stake" ? "STAKE" : "UNSTAKE"}
               </button>
               <span className="text-[#eeb636] md:text-sm text-xs">
