@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { graphQLService } from "@/data/queries/graphqlService";
 import { FETCH_FEED } from "@/data/queries/showNft";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 
 interface NFT {
   token_id: string;
@@ -89,9 +89,9 @@ const useFetchNFTMedia = ({
     }
   }, [nft_contract_id, owner, limit, offset, order, loading, hasMore]);
 
-  useEffect(() => {
-    fetchNFTData();
-  }, [fetchNFTData]);
+  // useEffect(() => {
+  //   fetchNFTData();
+  // }, [fetchNFTData]);
 
   return { nfts, loading, error, fetchNFTData, hasMore };
 };

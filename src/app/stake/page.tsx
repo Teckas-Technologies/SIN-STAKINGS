@@ -11,10 +11,11 @@ const Page = () => {
     const checkAndParseTransactionHash = async () => {
       const searchParams = new URLSearchParams(window.location.search);
       const txnHash = searchParams.get("transactionHashes");
-      const isStake = searchParams?.get("isStake") || "";
+      const isTokenStake = searchParams?.get("isStake") || "";
+      const isNftStake = searchParams?.get("isNftStake") || "";
       const accountId = searchParams?.get("senderId") || "";
 
-      if (txnHash && isStake) {
+      if (txnHash) {
         console.log("Transaction Hash Found:", txnHash);
 
         try {
@@ -24,8 +25,17 @@ const Page = () => {
           const txnStatus = await getTxnStatus(txnHash, senderId, rpcUrl);
 
           if (txnStatus === "success") {
-            toast.success("Staking Successful!");
-            window.history.replaceState(null, "", "/stake");
+            if (isTokenStake) {
+              toast.success("Token staking successful!");
+              window.history.replaceState(null, "", "/stake");
+            }
+
+            if (isNftStake) {
+              toast.success("NFT staking successful!");
+              window.history.replaceState(null, "", "/stake");
+            }
+          } else {
+            console.warn("Transaction status is not successful:", txnStatus);
           }
         } catch (error) {
           console.error("Error while checking transaction status:", error);

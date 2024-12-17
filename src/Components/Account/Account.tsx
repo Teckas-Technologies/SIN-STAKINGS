@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  SIN_STAKING_CONTRACT_CLAIM_NFT_REWARDS,
+  SIN_STAKING_CONTRACT_CLAIM_REWARDS,
   SIN_STAKING_CONTRACT_NFT_STAKE,
+  SIN_STAKING_CONTRACT_NFT_STAKE_INFO,
   SIN_STAKING_CONTRACT_STAKE_INFO,
 } from "@/config/constants";
 import { useSinBalance } from "@/hooks/fetchSinBalance";
@@ -9,9 +12,12 @@ import { NearContext } from "@/wallet/WallletSelector";
 import { useContext, useEffect, useState } from "react";
 import Loader from "../Loader/Loader";
 import toast, { Toaster } from "react-hot-toast";
-import { useClaimRewards } from "@/hooks/useClaimRewards";
+import { useClaimTokenRewards } from "@/hooks/useClaimTokenRewards";
 import { useUnstake } from "@/hooks/useUnstake";
-import './Account.css'
+import "./Account.css";
+import { useNftStakingInfo } from "@/hooks/viewStakingNft";
+import { useClaimNftRewards } from "@/hooks/useClaimNftRewards";
+import { useUnstakeNfts } from "@/hooks/useUnstakeNft";
 interface StakingInfo {
   amount: string;
   staked_tokens: string;
@@ -19,21 +25,30 @@ interface StakingInfo {
   start_timestamp: number;
   lockup_period: number;
 }
-
-// Function to convert yocto-units to NEAR and format it
-function formatYoctoAmount(amountYocto: string) {
-  // Convert yocto-units to NEAR (or the token's base unit)
-  const amountBase = Number(amountYocto) / Math.pow(10, 24);
-
-  // Format with two decimal places for readability
-  return amountBase.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+interface StakeNftInfo {
+  nft_ids: string[];
+  lockup_period: number;
+  start_timestamp: number;
+  claimed_rewards: string;
+  queen: string;
+  drone: string;
+  worker: string;
 }
 
 export default function NFTStakeSection() {
+  // Function to convert yocto-units to NEAR and format it
+  function formatYoctoAmount(amountYocto: string) {
+    // Convert yocto-units to NEAR (or the token's base unit)
+    const amountBase = Number(amountYocto) / Math.pow(10, 24);
+
+    // Format with two decimal places for readability
+    return amountBase.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }
   const [isClaiming, setIsClaiming] = useState(false);
+  const [isNftClaiming, setNftIsClaiming] = useState(false);
   const [activeTable, setActiveTable] = useState<"tokens" | "nfts">("tokens");
   const { wallet, signedAccountId } = useContext(NearContext);
   const { balance } = useSinBalance({ wallet, signedAccountId });
@@ -41,11 +56,21 @@ export default function NFTStakeSection() {
     wallet,
     SIN_STAKING_CONTRACT_STAKE_INFO
   );
-  const { claimRewards } = useClaimRewards(
+  const { nftStakingInfo, nftLoading, error, fetchNftStakingInfo } =
+    useNftStakingInfo(wallet, SIN_STAKING_CONTRACT_NFT_STAKE_INFO);
+  const { claimTokenRewards } = useClaimTokenRewards(
+    wallet,
+    SIN_STAKING_CONTRACT_CLAIM_REWARDS
+  );
+  const { claimNftRewards } = useClaimNftRewards(
+    wallet,
+    SIN_STAKING_CONTRACT_CLAIM_NFT_REWARDS
+  );
+  const { unstake } = useUnstake(wallet, SIN_STAKING_CONTRACT_STAKE_INFO);
+  const { unstakeNfts } = useUnstakeNfts(
     wallet,
     SIN_STAKING_CONTRACT_NFT_STAKE
   );
-  const { unstake } = useUnstake(wallet, SIN_STAKING_CONTRACT_STAKE_INFO);
   const handleSignIn = async () => {
     return wallet?.signIn();
   };
@@ -53,18 +78,62 @@ export default function NFTStakeSection() {
     return wallet?.signOut();
   };
 
-  const totalTokensStaked = stakingInfo?.amount ? (
-    formatYoctoAmount(stakingInfo.amount)
-  ) : (
-    <Loader />
-  );
+  // const totalTokensStaked = stakingInfo?.amount ? (
+  //   formatYoctoAmount(stakingInfo.amount)
+  // ) : (
+  //   <Loader />
+  // );
 
   useEffect(() => {
-    if (signedAccountId) {
+    if (activeTable === "tokens" && signedAccountId) {
       fetchStakingInfo(signedAccountId);
     }
   }, [signedAccountId]);
+  useEffect(() => {
+    if (activeTable === "nfts" && signedAccountId) {
+      fetchNftStakingInfo(signedAccountId);
+    }
+  }, [activeTable, signedAccountId]);
 
+  const handleNftClaim = async (stakeInfo: StakeNftInfo, index: number) => {
+    if (isNftClaiming) return;
+
+    if (!nftStakingInfo) {
+      toast.error("No staking information available.");
+      return;
+    }
+
+    if (parseFloat(stakeInfo.claimed_rewards) > 0) {
+      setIsClaiming(true);
+
+      try {
+        const stakeIndex = index;
+        await claimNftRewards(stakeIndex, signedAccountId);
+      } catch (error) {
+        console.error("Error claiming rewards:", error);
+        toast.error("Failed to claim rewards. Please try again.");
+      } finally {
+        setNftIsClaiming(false);
+      }
+    } else {
+      const currentTime = Date.now();
+      const stakingEndTime =
+        stakeInfo.start_timestamp / 1000000 + stakeInfo.lockup_period * 1000;
+
+      if (currentTime < stakingEndTime) {
+        const claimDate = new Date(stakingEndTime).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+        toast.error(
+          `You are in the lockup period. Please claim after ${claimDate}.`
+        );
+      } else {
+        toast.error("No rewards to claim yet.");
+      }
+    }
+  };
   const handleClaim = async (staking: StakingInfo, index: number) => {
     if (isClaiming) return;
 
@@ -73,32 +142,40 @@ export default function NFTStakeSection() {
       return;
     }
 
-    const currentTime = Date.now();
-    const stakingEndTime =
-      staking.start_timestamp / 1000000 + staking.lockup_period * 1000;
+    if (parseFloat(staking.claimed_rewards) > 0) {
+      setIsClaiming(true);
 
-    if (currentTime < stakingEndTime) {
-      const remainingTime = Math.ceil(
-        (stakingEndTime - currentTime) / 86400000
-      );
-      toast.error(
-        `You are in the lockup period. Please wait ${remainingTime} days to claim.`
-      );
-      return;
-    }
+      try {
+        const stakeIndex = index;
+        console.log(stakeIndex);
+        
+        await claimTokenRewards(stakeIndex, signedAccountId);
+      } catch (error) {
+        console.error("Error claiming rewards:", error);
+        toast.error("Failed to claim rewards. Please try again.");
+      } finally {
+        setIsClaiming(false);
+      }
+    } else {
+      const currentTime = Date.now();
+      const stakingEndTime =
+        staking.start_timestamp / 1000000 + staking.lockup_period * 1000;
 
-    setIsClaiming(true);
-
-    try {
-      const stakeIndex = index;
-      await claimRewards(stakeIndex,signedAccountId);
-    } catch (error) {
-      console.error("Error claiming rewards:", error);
-      toast.error("Failed to claim rewards. Please try again.");
-    } finally {
-      setIsClaiming(false);
+      if (currentTime < stakingEndTime) {
+        const claimDate = new Date(stakingEndTime).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+        toast.error(
+          `You are in the lockup period. Please claim after ${claimDate}.`
+        );
+      } else {
+        toast.error("No rewards to claim yet.");
+      }
     }
   };
+
   const handleUnstake = async (staking: StakingInfo, index: number) => {
     try {
       const stakeIndex = index;
@@ -109,7 +186,16 @@ export default function NFTStakeSection() {
       console.error("Error unstaking:", error);
     }
   };
+  const handleUnstakeNft = async (staking: StakeNftInfo, index: number) => {
+    try {
+      const stakeIndex = index;
 
+      const result = await unstakeNfts(stakeIndex, signedAccountId);
+      console.log("Unstake result:", result);
+    } catch (error) {
+      console.error("Error unstaking:", error);
+    }
+  };
   return (
     <div className="min-h-screen text-white flex flex-col items-center justify-center mt-[100px]">
       {signedAccountId ? (
@@ -160,11 +246,11 @@ export default function NFTStakeSection() {
       )}
 
       <div
-        className="flex flex-col items-center justify-center table-container"
+        className="flex flex-col items-center justify-center"
         style={{ fontFamily: "montserrat-variablefont" }}
       >
-        <div className="flex flex-col items-center justify-between gap-4 mt-10 md:p-6 p-3 bg-black bg-opacity-80 shadow-lg w-[95%] md:w-[900px] border border-yellow-400 rounded-lg h-[400px] overflow-y-auto custom-scrollbar">
-          <div className="flex flex-row items-center justify-between w-full">
+        <div className="flex flex-col  mt-10 md:p-6 p-3 bg-black bg-opacity-80 shadow-lg w-[95%] md:w-[1100px] border border-yellow-400 rounded-lg h-[400px] overflow-y-auto custom-scrollbar">
+          <div className="flex flex-row items-center justify-between w-full mt-5">
             <div
               className={`flex flex-col items-center gap-2 cursor-pointer ${
                 activeTable === "tokens" ? "text-yellow-400" : "text-gray-400"
@@ -187,7 +273,7 @@ export default function NFTStakeSection() {
             </div>
           </div>
 
-          <div className="w-full mt-4 bg-transparent text-black rounded-lg shadow-lg p-4">
+          <div className="w-full mt-4 bg-transparent flex items-center justify-center p-3">
             {activeTable === "tokens" && (
               <table className="table-auto w-full text-left">
                 <thead>
@@ -298,31 +384,120 @@ export default function NFTStakeSection() {
               <table className="table-auto w-full text-left">
                 <thead>
                   <tr>
-                    <th className="px-4 py-2 border-b text-yellow-700">
-                      NFT ID
+                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center">
+                      S.NO
                     </th>
-                    <th className="px-4 py-2 border-b text-yellow-700">Name</th>
-                    <th className="px-4 py-2 border-b text-yellow-700 hidden sm:table-cell">
+                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center md:w-[160px] w-[126px]">
+                      Staked NFTs
+                    </th>
+                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
+                      Lockup Period
+                    </th>
+                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
                       Date Staked
                     </th>
-                    <th className="px-4 py-2 border-b text-yellow-700">
-                      Status
+                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
+                      Queen
+                    </th>
+                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
+                      Drone
+                    </th>
+                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
+                      Worker
+                    </th>
+                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center">
+                      Reward
+                    </th>
+                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center">
+                      Unstake
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td className="px-4 py-2 border-b text-yellow-400">101</td>
-                    <td className="px-4 py-2 border-b text-yellow-400">
-                      Golden NFT
-                    </td>
-                    <td className="px-4 py-2 border-b text-yellow-400 hidden sm:table-cell">
-                      2024-12-15
-                    </td>
-                    <td className="px-4 py-2 border-b text-yellow-400">
-                      Staked
-                    </td>
-                  </tr>
+                  {nftStakingInfo && nftStakingInfo.length > 0 ? (
+                    nftStakingInfo.map(
+                      (stakeInfo: StakeNftInfo, index: number) => {
+                        const lockupPeriodDays =
+                          stakeInfo.lockup_period / 86400;
+                        const dateStaked = new Date(
+                          stakeInfo.start_timestamp / 1000000
+                        ).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        });
+                        const claimedRewards = formatYoctoAmount(
+                          stakeInfo.claimed_rewards.toString()
+                        );
+
+                        return (
+                          <tr key={index}>
+                            <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm">
+                              {index + 1}
+                            </td>
+                            <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm">
+                              {stakeInfo.nft_ids.length} NFTs
+                            </td>
+                            <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
+                              {lockupPeriodDays} Days
+                            </td>
+                            <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
+                              {dateStaked}
+                            </td>
+                            <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
+                              {stakeInfo.queen}
+                            </td>
+                            <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
+                              {stakeInfo.drone}
+                            </td>
+                            <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
+                              {stakeInfo.worker}
+                            </td>
+                            <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center align-middle">
+                              <button
+                                className="px-4 py-1 bg-yellow-400 text-black rounded-full text-[8px] md:text-xs font-medium"
+                                onClick={() => handleNftClaim(stakeInfo, index)}
+                              >
+                                Claim
+                              </button>
+                            </td>
+                            <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center align-middle">
+                              <div className="flex justify-center items-center">
+                                <button
+                                  className="px-4 py-1 bg-yellow-400 text-black rounded-full text-[8px] md:text-xs font-medium"
+                                  onClick={() =>
+                                    handleUnstakeNft(stakeInfo, index)
+                                  }
+                                >
+                                  Unstake
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      }
+                    )
+                  ) : nftLoading ? (
+                    <tr>
+                      <td colSpan={10} className="px-4 py-8 text-center">
+                        <div className="flex justify-center items-center space-x-2">
+                          <div className="w-5 h-5 border-4 border-t-yellow-400 border-solid rounded-full animate-spin"></div>
+                          <span className="text-yellow-400 text-xs md:text-sm">
+                            Loading...
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={10}
+                        className="px-4 py-8 text-center text-yellow-400 text-xs md:text-sm"
+                      >
+                        No NFTs staked yet. Stake your NFTs to earn rewards.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             )}
@@ -334,11 +509,11 @@ export default function NFTStakeSection() {
         className="mt-10 text-center text-yellow-400"
         style={{ fontFamily: "Garet-book" }}
       >
-        <p>DONT HAVE THE NFT? GET ONE ON MITTE</p>
+        <p className="font-semibold">DONT HAVE THE NFT? GET ONE ON MITTE</p>
         <img
           src="/images/mitte.png"
           alt="Mitte Logo"
-          className="h-[60px] w-[60px] mx-auto mt-4"
+          className="h-[60px] w-[60px] mx-auto mt-4 mb-3"
         />
       </div>
       <Toaster />

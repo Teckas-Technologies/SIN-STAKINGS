@@ -6,16 +6,18 @@ import { useStake } from "@/hooks/useStake";
 import { NearContext } from "@/wallet/WallletSelector";
 import { useSearchParams } from "next/navigation";
 import { useContext, useEffect, useRef, useState } from "react";
-import { useClaimRewards } from "@/hooks/useClaimRewards";
+import { useClaimTokenRewards } from "@/hooks/useClaimTokenRewards";
 
 import useFetchNFTMedia from "@/hooks/useFeed";
 import "./Stake.css";
 import Loader from "../Loader/Loader";
 import {
+  SIN_STAKING_CONTRACT_BALANCE,
   SIN_STAKING_CONTRACT_NFT_STAKE,
   SIN_STAKING_CONTRACT_STAKE_INFO,
 } from "@/config/constants";
 import { useStakingInfo } from "@/hooks/viewStakingToken";
+import { useStakeNFTs } from "@/hooks/stakeNft";
 export default function StakeSection() {
   const { wallet, signedAccountId } = useContext(NearContext);
   const { balance } = useSinBalance({ wallet, signedAccountId });
@@ -35,55 +37,59 @@ export default function StakeSection() {
     wallet,
     SIN_STAKING_CONTRACT_STAKE_INFO
   );
-  const nft_contract_id = SIN_STAKING_CONTRACT_NFT_STAKE;
+  const nft_contract_id = "artbattle.mintspace2.testnet";
+  const ownerId = signedAccountId;
+  console.log("ownerId:", ownerId);
   const { nfts, loading, error, fetchNFTData, hasMore } = useFetchNFTMedia({
     nft_contract_id: nft_contract_id,
-    owner: signedAccountId,
+    owner: ownerId,
   });
-
+  useEffect(() => {
+    if (currentTab === "STAKE_NFT" && signedAccountId) {
+      fetchNFTData();
+    }
+  }, [currentTab, signedAccountId]);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const handleScroll = () => {
-    if (containerRef.current) {
-      const bottom =
-        containerRef.current.scrollHeight ===
-        containerRef.current.scrollTop + containerRef.current.clientHeight;
-
-      if (bottom && !loading && hasMore) {
+    if (
+      containerRef.current &&
+      containerRef.current.scrollTop + containerRef.current.clientHeight >=
+        containerRef.current.scrollHeight
+    ) {
+      if (!loading && hasMore) {
         fetchNFTData();
       }
     }
   };
 
   useEffect(() => {
-    const currentContainer = containerRef.current;
-    if (currentContainer) {
-      currentContainer.addEventListener("scroll", handleScroll);
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener("scroll", handleScroll);
     }
 
     return () => {
-      if (currentContainer) {
-        currentContainer.removeEventListener("scroll", handleScroll);
+      if (container) {
+        container.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [fetchNFTData, loading, hasMore]);
-  const { stake } = useStake(wallet, "sin-test-tkn.testnet");
+  }, [loading, hasMore]);
+
+  const { stake } = useStake(wallet, SIN_STAKING_CONTRACT_BALANCE);
 
   const handleStake = async () => {
-    // Validate the entered amount
     if (!amount || isNaN(parseFloat(amount))) {
       toast.error("Please enter a valid amount.");
       return;
     }
 
-    // Validate that a lock-up period is selected
     if (!selectedPeriod) {
       toast.error("Please select a lock-up period.");
       return;
     }
 
     try {
-      // Map the selected period to lockup days
       const lockupDays = {
         "1-Month": 30,
         "3-Month": 90,
@@ -96,10 +102,8 @@ export default function StakeSection() {
         return;
       }
 
-      // Call the stake function with the correct arguments
       await stake(amount, signedAccountId, lockupDays);
 
-      // If staking is successful, show success message
       toast.success("Staking successful!");
     } catch (error) {
       console.error("Error staking:", error);
@@ -113,18 +117,37 @@ export default function StakeSection() {
     "6-Month": 75,
     "9-Month": 100,
   };
-  // const nfts = Array.from({ length: 8 }, (_, i) => `nft-${i + 1}`);
+  const { stakeNFTs } = useStakeNFTs(wallet, SIN_STAKING_CONTRACT_NFT_STAKE);
   const handlePeriodSelection = (
     period: "1-Month" | "3-Month" | "6-Month" | "9-Month"
   ) => {
     setSelectedPeriod(period);
   };
-  const toggleSelectNFT = (nft: string) => {
-    setSelectedNFTs((prev) =>
-      prev.includes(nft) ? prev.filter((item) => item !== nft) : [...prev, nft]
-    );
-  };
+  const toggleSelectNFT = (token_id: string) => {
+    console.log("Selected NFT token_id:", token_id);
 
+    setSelectedNFTs((prevSelectedNFTs) => {
+      if (prevSelectedNFTs.includes(token_id)) {
+        return prevSelectedNFTs.filter((id) => id !== token_id);
+      } else {
+        return [...prevSelectedNFTs, token_id];
+      }
+    });
+  };
+  const handleNftStake = async () => {
+    if (selectedNFTs.length === 0) {
+      toast.error("Please select an NFT to stake.");
+      return;
+    }
+
+    try {
+      const senderId = signedAccountId;
+      const result = await stakeNFTs(selectedNFTs, senderId);
+      console.log("Staked NFTs result:", result);
+    } catch (error) {
+      console.error("Error staking NFTs:", error);
+    }
+  };
   const searchParams = useSearchParams();
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -339,28 +362,11 @@ export default function StakeSection() {
         {currentTab === "STAKE_NFT" && (
           <div>
             <div
-              className="flex justify-between mb-6"
+              className="flex justify-center mb-6"
               style={{ fontFamily: "montserrat-variablefont" }}
             >
-              <h2
-                className={`cursor-pointer md:text-lg text-sm font-bold ${
-                  activeSection === "stake"
-                    ? "text-yellow-400"
-                    : "text-gray-500"
-                }`}
-                onClick={() => setActiveSection("stake")}
-              >
+              <h2 className="cursor-pointer md:text-lg text-sm font-bold text-yellow-400">
                 YOUR NFTs
-              </h2>
-              <h2
-                className={`cursor-pointer md:text-lg text-sm font-bold ${
-                  activeSection === "unstake"
-                    ? "text-yellow-400"
-                    : "text-gray-500"
-                }`}
-                onClick={() => setActiveSection("unstake")}
-              >
-                YOUR STAKED NFTs
               </h2>
             </div>
             {nfts.length === 0 && !loading && !error && (
@@ -373,74 +379,77 @@ export default function StakeSection() {
                 </p>
               </div>
             )}
-
-            {nfts.length > 0 && (
-              <div
-                className="grid grid-cols-4 md:gap-5 gap-2 mb-6 overflow-y-auto h-[350px] container"
-                ref={containerRef}
-              >
-                {nfts.map((nft, index) => (
-                  <div
-                    key={index}
-                    className="relative cursor-pointer rounded-lg"
-                    onClick={() => toggleSelectNFT(nft.token_id)}
-                  >
-                    <img
-                      src={nft.media || "/images/mintbase.png"}
-                      alt={`NFT ${index + 1}`}
-                      className="rounded-lg md:w-[100px] md:h-[80px] w-[100px] h-[70px]"
-                    />
+            <div
+              className="overflow-y-auto h-[250px] container mb-3"
+              ref={containerRef}
+            >
+              {nfts.length > 0 && (
+                <div className="grid grid-cols-4 md:gap-5 gap-2 mb-6 ">
+                  {nfts.map((nft, index) => (
                     <div
-                      className="absolute bottom-2 right-2 h-4 w-4 rounded-sm flex items-center justify-center bg-black"
-                      style={{ border: "1px solid #eeb636" }}
+                      key={index}
+                      className="relative cursor-pointer rounded-lg"
+                      onClick={() => toggleSelectNFT(nft.token_id)}
                     >
-                      {selectedNFTs.includes(nft.token_id) && (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 text-yellow-500"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      )}
+                      <img
+                        src={nft.media || "/images/mintbase.png"}
+                        alt={`NFT ${index + 1}`}
+                        className="rounded-lg md:w-[100px] md:h-[80px] w-[100px] h-[70px]"
+                      />
+                      <div
+                        className="absolute bottom-2 right-2 h-4 w-4 rounded-sm flex items-center justify-center bg-black"
+                        style={{ border: "1px solid #eeb636" }}
+                      >
+                        {selectedNFTs.includes(nft.token_id) && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 text-yellow-500"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-                {loading && (
-                  <div className="flex items-center justify-center">
-                    <Loader />
-                  </div>
-                )}
-                {error && (
-                  <p
-                    className="text-red-500"
-                    style={{ fontFamily: "montserrat-variablefont" }}
-                  >
-                    Failed to load NFT
-                  </p>
-                )}
-                {!hasMore && (
+                  ))}
+                  {loading && (
+                    <div className="flex items-center justify-center">
+                      <Loader />
+                    </div>
+                  )}
+                  {error && (
+                    <p
+                      className="text-red-500"
+                      style={{ fontFamily: "montserrat-variablefont" }}
+                    >
+                      Failed to load NFT
+                    </p>
+                  )}
+                  {/* {!hasMore && (
                   <p
                     className="flex items-center justify-center text-gray-500 text-center text-xs"
                     style={{ fontFamily: "montserrat-variablefont" }}
                   >
                     No more NFT&apos;s to load
                   </p>
-                )}
-              </div>
-            )}
-
+                )} */}
+                </div>
+              )}
+            </div>
             <div
               className="flex flex-row items-center justify-between"
               style={{ fontFamily: "montserrat-variablefont" }}
             >
-              <button className="bg-yellow-500 text-[#3b2d2f] font-bold px-4  md:text-sm text-xs py-2 rounded-full shadow-md hover:bg-yellow-600">
-                {activeSection === "stake" ? "STAKE" : "UNSTAKE"}
+              <button
+                className="bg-yellow-500 text-[#3b2d2f] font-bold px-4  md:text-sm text-xs py-2 rounded-full shadow-md hover:bg-yellow-600"
+                onClick={handleNftStake}
+              >
+                STAKE
               </button>
               <span className="text-[#eeb636] md:text-sm text-xs">
                 *LOCK-UP PERIOD IS ONE MONTH
@@ -451,7 +460,7 @@ export default function StakeSection() {
       </div>
 
       <div className="mt-10 text-center text-yellow-400">
-        <p style={{ fontFamily: "Garet-book" }}>
+        <p style={{ fontFamily: "Garet-book" }} className="font-semibold">
           DONT HAVE $SIN? BUY SOME ON REF FINANCE
         </p>
         <img

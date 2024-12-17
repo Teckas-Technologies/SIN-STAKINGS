@@ -12,7 +12,9 @@ const Page = () => {
       const searchParams = new URLSearchParams(window.location.search);
       const txnHash = searchParams.get("transactionHashes");
       const isUnStake = searchParams?.get("isUnStake") || "";
+      const isNftUnStake = searchParams?.get("isNftUnStake") || "";
       const isClaimReward = searchParams?.get("isClaim") || "";
+      const isNftClaimReward = searchParams?.get("isNftClaim") || "";
       const accountId = searchParams?.get("senderId") || "";
 
       if (txnHash) {
@@ -26,12 +28,26 @@ const Page = () => {
 
           if (txnStatus === "success") {
             if (isUnStake) {
-              toast.success("Unstaking Successful!");
+              toast.success("You have successfully unstaked your tokens!");
               window.history.replaceState(null, "", "/account");
             }
 
             if (isClaimReward) {
-              toast.success("Reward Claimed Successfully!");
+              toast.success(
+                "You have received a reward for unstaking your tokens!"
+              );
+              window.history.replaceState(null, "", "/account");
+            }
+
+            if (isNftUnStake) {
+              toast.success("You have successfully unstaked your NFTs!");
+              window.history.replaceState(null, "", "/account");
+            }
+
+            if (isNftClaimReward) {
+              toast.success(
+                "You have received a reward for unstaking your NFTs!"
+              );
               window.history.replaceState(null, "", "/account");
             }
           } else {

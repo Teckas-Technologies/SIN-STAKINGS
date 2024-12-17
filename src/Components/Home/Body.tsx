@@ -114,7 +114,12 @@ const Body = () => {
           style={{ fontFamily: "Garet-book" }}
         >
           <div className="flex flex-col items-center">
-            <a href="#" className="flex justify-center items-center">
+            <a
+              href="https://beta.mitte.gg/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex justify-center items-center"
+            >
               <img src="/images/mitte.png" alt="Mitte" className="h-10 w-10" />
             </a>
             <span className="mt-2 text-[10px] text-[#f8b12c] uppercase">
@@ -122,7 +127,12 @@ const Body = () => {
             </span>
           </div>
           <div className="flex flex-col items-center">
-            <a href="#" className="flex justify-center items-center">
+            <a
+              href="https://www.mintbase.xyz/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex justify-center items-center"
+            >
               <img
                 src="/images/mintbase.png"
                 alt="Mintbase"
@@ -134,7 +144,12 @@ const Body = () => {
             </span>
           </div>
           <div className="flex flex-col items-center">
-            <a href="#" className="flex justify-center items-center">
+            <a
+              href="https://telegram.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex justify-center items-center"
+            >
               <img
                 src="/icons/telegram.svg"
                 alt="Telegram"
@@ -146,7 +161,12 @@ const Body = () => {
             </span>
           </div>
           <div className="flex flex-col items-center">
-            <a href="#" className="flex justify-center items-center">
+            <a
+              href="https://twitter.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex justify-center items-center"
+            >
               <img
                 src="/images/twitter.png"
                 alt="Twitter"
@@ -158,7 +178,12 @@ const Body = () => {
             </span>
           </div>
           <div className="flex flex-col items-center">
-            <a href="#" className="flex justify-center items-center">
+            <a
+              href="https://dexscreener.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex justify-center items-center"
+            >
               <img
                 src="/images/dexs.png"
                 alt="Dexscreener"
@@ -170,7 +195,12 @@ const Body = () => {
             </span>
           </div>
           <div className="flex flex-col items-center">
-            <a href="#" className="flex justify-center items-center">
+            <a
+              href="https://www.mintbase.xyz/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex justify-center items-center"
+            >
               <img
                 src="/images/litepaper.png"
                 alt="Litepaper"
@@ -182,7 +212,12 @@ const Body = () => {
             </span>
           </div>
           <div className="flex flex-col items-center">
-            <a href="#" className="flex justify-center items-center">
+            <a
+              href="https://www.ref.finance/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex justify-center items-center"
+            >
               <img
                 src="/images/ref-finace.png"
                 alt="Litepaper"

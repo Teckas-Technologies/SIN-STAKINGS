@@ -26,4 +26,6 @@
     background: #3b2d2f;  /* Background color of the track */
     border-radius: 10px;
   }
-  
+  .position{
+    position: relative;
+  }
