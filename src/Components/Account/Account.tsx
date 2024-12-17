@@ -11,7 +11,7 @@ import Loader from "../Loader/Loader";
 import toast, { Toaster } from "react-hot-toast";
 import { useClaimRewards } from "@/hooks/useClaimRewards";
 import { useUnstake } from "@/hooks/useUnstake";
-
+import './Account.css'
 interface StakingInfo {
   amount: string;
   staked_tokens: string;
@@ -163,7 +163,7 @@ export default function NFTStakeSection() {
         className="flex flex-col items-center justify-center table-container"
         style={{ fontFamily: "montserrat-variablefont" }}
       >
-        <div className="flex flex-col items-center justify-between gap-4 mt-10 md:p-6 p-3 bg-black bg-opacity-80 shadow-lg w-[95%] md:w-[900px] border border-yellow-400 rounded-lg">
+        <div className="flex flex-col items-center justify-between gap-4 mt-10 md:p-6 p-3 bg-black bg-opacity-80 shadow-lg w-[95%] md:w-[900px] border border-yellow-400 rounded-lg h-[400px] overflow-y-auto custom-scrollbar">
           <div className="flex flex-row items-center justify-between w-full">
             <div
               className={`flex flex-col items-center gap-2 cursor-pointer ${
