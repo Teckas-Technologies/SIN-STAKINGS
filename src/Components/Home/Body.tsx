@@ -21,7 +21,11 @@ const Body = () => {
   const handleNavigationToNFTStaking = () => {
     router.push("/stake?tab=STAKE_NFT");
   };
-
+  const formatSinBalance = (balance: string): string => {
+    const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
+    const sinBalance = parseFloat(balance) / yoctoToSin;
+    return sinBalance.toFixed(8); // Display up to 8 decimal places
+  };
   return (
     <div
       className="flex flex-col items-center min-h-screen text-white mt-[100px]"
@@ -58,7 +62,7 @@ const Body = () => {
               className="font-medium md:text-lg text-sm text-black"
               style={{ fontFamily: "montserrat-variablefont" }}
             >
-              {balance}
+              {balance ? formatSinBalance(balance) : ""}
             </span>
           </div>
         </div>
@@ -86,25 +90,33 @@ const Body = () => {
       >
         <div className="space-y-4">
           <button
-            className="w-full px-6 py-3 font-semibold bg-[#9d6c31] rounded-full text-black hover:bg-[#c88d4f] uppercase"
+            className="w-full px-6 py-3 font-semibold bg-[#f8b12c] rounded-full text-black hover:bg-[#ffd65a] uppercase"
             onClick={handleNavigation}
             style={{ fontFamily: "montserrat-variablefont" }}
           >
             Token Staking
           </button>
           <button
-            className="w-full px-6 py-3 font-semibold bg-[#9d6c31] rounded-full text-black hover:bg-[#c88d4f] uppercase"
+            className="w-full px-6 py-3 font-semibold bg-[#f8b12c] rounded-full text-black hover:bg-[#ffd65a] uppercase"
             onClick={handleNavigationToNFTStaking}
             style={{ fontFamily: "montserrat-variablefont" }}
           >
             NFT Staking
           </button>
-          <button
-            className="w-full px-6 py-3 font-semibold bg-[#f8b12c] text-black rounded-full hover:bg-[#ffd65a] uppercase"
-            style={{ fontFamily: "montserrat-variablefont" }}
+         <div>
+         <a
+            href="https://meme.cooking/meme/339"
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            Buy $SIN
-          </button>
+            <button
+              className="w-full px-6 py-3 font-semibold bg-[#f8b12c] text-black rounded-full hover:bg-[#ffd65a] uppercase"
+              style={{ fontFamily: "montserrat-variablefont" }}
+            >
+              Buy $SIN
+            </button>
+          </a>
+         </div>
         </div>
 
         <hr className="my-6 border-t border-[#f8b12c]" />
@@ -145,7 +157,7 @@ const Body = () => {
           </div>
           <div className="flex flex-col items-center">
             <a
-              href="https://telegram.org/"
+              href="https://t.me/survivalisnearpublic"
               target="_blank"
               rel="noopener noreferrer"
               className="flex justify-center items-center"
@@ -162,7 +174,7 @@ const Body = () => {
           </div>
           <div className="flex flex-col items-center">
             <a
-              href="https://twitter.com/"
+              href="https://x.com/survivalisnear"
               target="_blank"
               rel="noopener noreferrer"
               className="flex justify-center items-center"
@@ -196,7 +208,7 @@ const Body = () => {
           </div>
           <div className="flex flex-col items-center">
             <a
-              href="https://www.mintbase.xyz/"
+              href="https://survival-is-near.gitbook.io/litepaper"
               target="_blank"
               rel="noopener noreferrer"
               className="flex justify-center items-center"
@@ -213,7 +225,7 @@ const Body = () => {
           </div>
           <div className="flex flex-col items-center">
             <a
-              href="https://www.ref.finance/"
+              href="https://app.ref.finance/pool/5583"
               target="_blank"
               rel="noopener noreferrer"
               className="flex justify-center items-center"

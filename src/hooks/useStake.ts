@@ -22,7 +22,7 @@ export const useStake = (wallet: Wallet | undefined, contractId: string) => {
        
         const msg = JSON.stringify({ lockup_days: lockupPeriodInDays });
         // Call the smart contract method
-        const callbackUrl = `${window.location.origin}/stake?isStake=true&senderId=${encodeURIComponent(senderId)}`;
+        const callbackUrl = `${window.location.origin}/account?isStake=true&senderId=${encodeURIComponent(senderId)}`;
         const result = await wallet.callMethod({
           contractId,
           callbackUrl,

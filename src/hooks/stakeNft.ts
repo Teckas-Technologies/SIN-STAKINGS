@@ -18,7 +18,7 @@ export const useStakeNFTs = (
 
         const callbackUrl = `${
           window.location.origin
-        }/stake?isNftStake=true&senderId=${encodeURIComponent(senderId)}`;
+        }/account?isNftStake=true&senderId=${encodeURIComponent(senderId)}`;
         const result = await wallet.callMethod({
           contractId,
           callbackUrl,

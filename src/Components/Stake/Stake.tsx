@@ -13,11 +13,16 @@ import "./Stake.css";
 import Loader from "../Loader/Loader";
 import {
   SIN_STAKING_CONTRACT_BALANCE,
+  SIN_STAKING_CONTRACT_CLAIM_NFT_REWARDS,
+  SIN_STAKING_CONTRACT_CLAIM_REWARDS,
   SIN_STAKING_CONTRACT_NFT_STAKE,
+  SIN_STAKING_CONTRACT_SHOW_NFTS,
   SIN_STAKING_CONTRACT_STAKE_INFO,
+  SIN_STAKING_CONTRACT_TOKEN_STAKE,
 } from "@/config/constants";
 import { useStakingInfo } from "@/hooks/viewStakingToken";
 import { useStakeNFTs } from "@/hooks/stakeNft";
+import { useLastRewardDistribution } from "@/hooks/getLastRewardDistribution";
 export default function StakeSection() {
   const { wallet, signedAccountId } = useContext(NearContext);
   const { balance } = useSinBalance({ wallet, signedAccountId });
@@ -32,18 +37,45 @@ export default function StakeSection() {
     "stake"
   );
   const [amount, setAmount] = useState<string>("");
-
+  const [percentage, setPercentage] = useState(0);
   const { stakingInfo, fetchStakingInfo } = useStakingInfo(
     wallet,
     SIN_STAKING_CONTRACT_STAKE_INFO
   );
-  const nft_contract_id = "artbattle.mintspace2.testnet";
+  const nft_contract_id = SIN_STAKING_CONTRACT_SHOW_NFTS;
   const ownerId = signedAccountId;
   console.log("ownerId:", ownerId);
   const { nfts, loading, error, fetchNFTData, hasMore } = useFetchNFTMedia({
     nft_contract_id: nft_contract_id,
     owner: ownerId,
   });
+  const tokenContractId = SIN_STAKING_CONTRACT_CLAIM_REWARDS;
+  const nftContractId = SIN_STAKING_CONTRACT_CLAIM_NFT_REWARDS;
+  const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
+
+  const formatSinBalance = (balance: string): string => {
+    const sinBalance = parseFloat(balance) / yoctoToSin;
+    return sinBalance.toFixed(8); // Display up to 8 decimal places
+  };
+  const {
+    rewardDistribution: tokenRewardDistribution,
+    fetchLastRewardDistribution: fetchTokenRewardDistribution,
+    loading: tokenLoading,
+  } = useLastRewardDistribution(wallet, tokenContractId);
+
+  const {
+    rewardDistribution: nftRewardDistribution,
+    fetchLastRewardDistribution: fetchNFTRewardDistribution,
+    loading: nftLoading,
+  } = useLastRewardDistribution(wallet, nftContractId);
+
+  useEffect(() => {
+    if (wallet) {
+      fetchTokenRewardDistribution();
+      fetchNFTRewardDistribution();
+    }
+  }, [wallet]);
+
   useEffect(() => {
     if (currentTab === "STAKE_NFT" && signedAccountId) {
       fetchNFTData();
@@ -76,10 +108,18 @@ export default function StakeSection() {
     };
   }, [loading, hasMore]);
 
-  const { stake } = useStake(wallet, SIN_STAKING_CONTRACT_BALANCE);
+  const { stake } = useStake(wallet, SIN_STAKING_CONTRACT_TOKEN_STAKE);
 
   const handleStake = async () => {
-    if (!amount || isNaN(parseFloat(amount))) {
+    if (!signedAccountId) {
+      toast.error("Please connect your wallet before stake your tokens!");
+      return;
+    }
+    if (!amount) {
+      toast.error("Please enter the amount.");
+      return;
+    }
+    if (isNaN(parseFloat(amount))) {
       toast.error("Please enter a valid amount.");
       return;
     }
@@ -123,6 +163,32 @@ export default function StakeSection() {
   ) => {
     setSelectedPeriod(period);
   };
+  // Format the raw yocto balance to readable SIN balance
+  const parsedBalance = balance ? formatSinBalance(balance) : "0";
+
+  // Update the range click handler to use human-readable balance
+  const handleRangeClick = (clickedPercentage: number) => {
+    const parsedBalanceFloat = parseFloat(parsedBalance);
+    const newAmount = ((clickedPercentage / 100) * parsedBalanceFloat).toFixed(
+      8
+    ); // Use parsedBalance in SIN format
+    setAmount(newAmount);
+    setPercentage(clickedPercentage);
+  };
+
+  // Handle input change and update the range based on the value
+  const handleInputChange = (value: string) => {
+    setAmount(value);
+    const numericValue = parseFloat(value);
+    const parsedBalanceFloat = parseFloat(parsedBalance);
+
+    if (!isNaN(numericValue) && parsedBalanceFloat > 0) {
+      const calculatedPercentage = (numericValue / parsedBalanceFloat) * 100;
+      setPercentage(Math.min(100, Math.max(0, calculatedPercentage))); // Keep percentage within 0-100 range
+    } else {
+      setPercentage(0); // Reset to 0 if input is invalid
+    }
+  };
   const toggleSelectNFT = (token_id: string) => {
     console.log("Selected NFT token_id:", token_id);
 
@@ -135,6 +201,10 @@ export default function StakeSection() {
     });
   };
   const handleNftStake = async () => {
+    if (!signedAccountId) {
+      toast.error("Please connect your wallet before stake your NFTs!");
+      return;
+    }
     if (selectedNFTs.length === 0) {
       toast.error("Please select an NFT to stake.");
       return;
@@ -208,7 +278,7 @@ export default function StakeSection() {
               className="font-medium md:text-lg text-sm text-black"
               style={{ fontFamily: "montserrat-variablefont" }}
             >
-              {balance}
+              {balance ? formatSinBalance(balance) : ""}
             </span>
           </div>
         </div>
@@ -247,10 +317,30 @@ export default function StakeSection() {
         </button>
       </div>
 
-      <div className="rounded-lg bg-black bg-opacity-70 shadow-lg w-[90%] md:w-[500px] md:px-6 md:py-6 px-4 py-5 border border-yellow-400 ">
+      <div className="rounded-xl bg-black bg-opacity-70 shadow-lg w-[90%] md:w-[500px] md:px-6 md:py-6 px-5 py-5 border border-yellow-400 ">
         {currentTab === "STAKE_SIN" && (
           <>
             <div>
+              <h4
+                className="text-center font-semibold text-sm mb-3 uppercase"
+                style={{ fontFamily: "montserrat-variablefont" }}
+              >
+                <span className="text-[#e88852] md:text-sm text-xs ">
+                  Last Reward Distribution:
+                </span>{" "}
+                <span className="text-yellow-300 md:text-sm text-xs ">
+                  {tokenRewardDistribution
+                    ? new Date(
+                        Number(tokenRewardDistribution) / 1_000_000
+                      ).toLocaleDateString("en-US", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "No rewards claimed yet"}
+                </span>
+              </h4>
+
               <div className="flex flex-row items-center justify-between">
                 <h2
                   className="text-center text-yellow-400 font-semibold mb-4 text-xs md:text-sm"
@@ -276,7 +366,7 @@ export default function StakeSection() {
                         selectedPeriod === period
                           ? "bg-yellow-600"
                           : "bg-[#eeb636]"
-                      } text-[#3b2d2f] font-semibold rounded-full md:py-2 md:px-4 px-2 py-1 text-xs md:text-sm hover:bg-yellow-600`}
+                      } text-[#3b2d2f] font-semibold rounded-full md:py-2 md:px-4 px-2 py-1 text-[11px] md:text-sm hover:bg-yellow-600`}
                       onClick={() =>
                         handlePeriodSelection(
                           period as
@@ -305,48 +395,40 @@ export default function StakeSection() {
               </div>
             </div>
 
-            <div className="mb-6 mt-9">
-              <div className="relative w-full h-1 bg-yellow-400 rounded-lg">
-                {Object.values(periods).map((percent, index) => (
+            <div className="mb-6 mt-9 relative w-full h-1 bg-yellow-400 rounded-lg">
+              {[0, 25, 50, 75, 100].map((point) => (
+                <div key={point} className="relative">
                   <div
-                    key={index}
-                    className="absolute top-[-10px] h-6 w-[4px] bg-yellow-400 transform -translate-x-1/2"
-                    style={{ left: `${percent}%` }}
-                  />
-                ))}
-
-                {[0, ...Object.values(periods)].map((percent, index) => (
-                  <div
-                    key={index}
-                    className="absolute text-yellow-400 md:text-sm text-[10px] font-semibold transform -translate-x-1/2 -translate-y-1/2"
-                    style={{
-                      left: `${percent}%`,
-                      top: "-20px",
-                      fontFamily: "montserrat-variablefont",
-                    }}
+                    className="absolute top-[-20px] text-xs text-yellow-600 font-semibold transform -translate-x-1/2 -translate-y-4"
+                    style={{ left: `${point}%`, fontFamily: "Garet-book" }}
                   >
-                    {percent}%
+                    {point}%
                   </div>
-                ))}
 
-                <div
-                  className="absolute top-1/2 w-4 h-4 bg-yellow-500 rounded-full transform -translate-x-1/2 -translate-y-1/2"
-                  style={{
-                    left: selectedPeriod ? `${periods[selectedPeriod]}%` : "0%",
-                  }}
-                />
-              </div>
+                  <div
+                    className="absolute top-[-10px] h-6 w-1 bg-yellow-400 transform -translate-x-1/2 cursor-pointer"
+                    style={{ left: `${point}%` }}
+                    onClick={() => handleRangeClick(point)}
+                  ></div>
+                </div>
+              ))}
+
+              <div
+                className="absolute top-[-7px] h-4 w-4 rounded-full bg-yellow-600 transform -translate-x-1/2"
+                style={{ left: `${percentage}%` }}
+              ></div>
             </div>
 
             <div className="flex flex-row items-center justify-between">
               <input
                 type="text"
                 placeholder="Enter the amount"
-                className="bg-[#3b2d2f] text-yellow-500 rounded-full md:py-2 md:px-4 py-2 px-2"
+                className="bg-[#3b2d2f] text-yellow-500 rounded-full md:py-2 md:px-4 py-1 px-2 w-[180px] md:w-[230px] md:placeholder:text-base placeholder:text-[13px]"
                 style={{ fontFamily: "Garet-book" }}
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => handleInputChange(e.target.value)}
               />
+
               <div className="text-center">
                 <button
                   onClick={handleStake}
@@ -361,6 +443,25 @@ export default function StakeSection() {
         )}
         {currentTab === "STAKE_NFT" && (
           <div>
+            <h4
+              className="text-center font-semibold text-sm mb-3 uppercase"
+              style={{ fontFamily: "montserrat-variablefont" }}
+            >
+              <span className="text-[#e88852] md:text-sm text-xs ">
+                Last Reward Distribution:
+              </span>{" "}
+              <span className="text-yellow-300 md:text-sm text-xs ">
+                {nftRewardDistribution
+                  ? new Date(
+                      Number(nftRewardDistribution) / 1_000_000
+                    ).toLocaleDateString("en-US", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "No rewards claimed yet"}
+              </span>
+            </h4>
             <div
               className="flex justify-center mb-6"
               style={{ fontFamily: "montserrat-variablefont" }}
@@ -369,7 +470,7 @@ export default function StakeSection() {
                 YOUR NFTs
               </h2>
             </div>
-            {nfts.length === 0 && !loading && !error && (
+            {signedAccountId && nfts.length === 0 && !loading && !error && (
               <div className="flex items-center justify-center h-[350px]">
                 <p
                   className="text-gray-500 text-center text-sm"
@@ -379,58 +480,69 @@ export default function StakeSection() {
                 </p>
               </div>
             )}
-            <div
-              className="overflow-y-auto h-[250px] container mb-3"
-              ref={containerRef}
-            >
-              {nfts.length > 0 && (
-                <div className="grid grid-cols-4 md:gap-5 gap-2 mb-6 ">
-                  {nfts.map((nft, index) => (
-                    <div
-                      key={index}
-                      className="relative cursor-pointer rounded-lg"
-                      onClick={() => toggleSelectNFT(nft.token_id)}
-                    >
-                      <img
-                        src={nft.media || "/images/mintbase.png"}
-                        alt={`NFT ${index + 1}`}
-                        className="rounded-lg md:w-[100px] md:h-[80px] w-[100px] h-[70px]"
-                      />
+            {!signedAccountId && !loading && !error && (
+              <div className="flex items-center justify-center h-[350px]">
+                <p
+                  className="text-gray-500 text-center text-sm"
+                  style={{ fontFamily: "montserrat-variablefont" }}
+                >
+                  Connect your wallet and start staking your NFTs
+                </p>
+              </div>
+            )}
+            {nfts.length > 0 && (
+              <div
+                className="overflow-y-auto h-[250px] container mb-3 md:p-2 p-0"
+                ref={containerRef}
+              >
+                {nfts.length > 0 && (
+                  <div className="grid grid-cols-4 md:gap-5 gap-2 mb-6 ">
+                    {nfts.map((nft, index) => (
                       <div
-                        className="absolute bottom-2 right-2 h-4 w-4 rounded-sm flex items-center justify-center bg-black"
-                        style={{ border: "1px solid #eeb636" }}
+                        key={index}
+                        className="relative cursor-pointer"
+                        onClick={() => toggleSelectNFT(nft.token_id)}
                       >
-                        {selectedNFTs.includes(nft.token_id) && (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4 text-yellow-500"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
+                        <img
+                          src={nft.media || "/images/mintbase.png"}
+                          alt={`NFT ${index + 1}`}
+                          className="rounded-lg md:w-[100px] md:h-[90px] w-[100px] h-[70px]"
+                        />
+                        <div
+                          className="absolute bottom-2 right-2 h-4 w-4 rounded-sm flex items-center justify-center bg-black"
+                          style={{ border: "1px solid #eeb636" }}
+                        >
+                          {selectedNFTs.includes(nft.token_id) && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4 text-yellow-500"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {loading && (
-                    <div className="flex items-center justify-center">
-                      <Loader />
-                    </div>
-                  )}
-                  {error && (
-                    <p
-                      className="text-red-500"
-                      style={{ fontFamily: "montserrat-variablefont" }}
-                    >
-                      Failed to load NFT
-                    </p>
-                  )}
-                  {/* {!hasMore && (
+                    ))}
+                    {loading && (
+                      <div className="flex items-center justify-center">
+                        <Loader />
+                      </div>
+                    )}
+                    {error && (
+                      <p
+                        className="text-red-500"
+                        style={{ fontFamily: "montserrat-variablefont" }}
+                      >
+                        Failed to load NFT
+                      </p>
+                    )}
+                    {/* {!hasMore && (
                   <p
                     className="flex items-center justify-center text-gray-500 text-center text-xs"
                     style={{ fontFamily: "montserrat-variablefont" }}
@@ -438,20 +550,21 @@ export default function StakeSection() {
                     No more NFT&apos;s to load
                   </p>
                 )} */}
-                </div>
-              )}
-            </div>
+                  </div>
+                )}
+              </div>
+            )}
             <div
               className="flex flex-row items-center justify-between"
               style={{ fontFamily: "montserrat-variablefont" }}
             >
               <button
-                className="bg-yellow-500 text-[#3b2d2f] font-bold px-4  md:text-sm text-xs py-2 rounded-full shadow-md hover:bg-yellow-600"
+                className="bg-yellow-500 text-[#3b2d2f] font-bold md:px-[40px] px-4 md:text-sm text-xs py-2 rounded-full shadow-md hover:bg-yellow-600"
                 onClick={handleNftStake}
               >
                 STAKE
               </button>
-              <span className="text-[#eeb636] md:text-sm text-xs">
+              <span className="text-[#eeb636] font-semibold md:text-sm text-xs">
                 *LOCK-UP PERIOD IS ONE MONTH
               </span>
             </div>
@@ -460,14 +573,20 @@ export default function StakeSection() {
       </div>
 
       <div className="mt-10 text-center text-yellow-400">
-        <p style={{ fontFamily: "Garet-book" }} className="font-semibold">
+        <p style={{ fontFamily: "Garet-book" }} className="md:text-base text-xs font-semibold">
           DONT HAVE $SIN? BUY SOME ON REF FINANCE
         </p>
-        <img
-          src="/images/Ref-finace.png"
-          alt="Ref Finance"
-          className="w-16 h-16 mx-auto mt-4"
-        />
+        <a
+          href="https://app.ref.finance/pool/5583"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img
+            src="/images/Ref-finace.png"
+            alt="Ref Finance"
+            className="w-16 h-16 mx-auto mt-4"
+          />
+        </a>
       </div>
       <Toaster />
     </div>

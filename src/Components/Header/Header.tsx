@@ -19,7 +19,7 @@ const Header = () => {
             className="md:text-4xl text-xl font-bold text-[#eeb636] whitespace-nowrap cursor-pointer"
             style={{ fontFamily: 'saved-zero' }}
           >
-            $SIN <span className="text-yellow-700">STAKING</span>
+            SIN <span className="text-yellow-700">STAKING</span>
           </div>
         </Link>
 

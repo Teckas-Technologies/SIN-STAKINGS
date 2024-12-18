@@ -1,12 +1,14 @@
 "use client";
-import NFTStakeSection from "@/Components/Account/Account";
+
 import Footer from "@/Components/Footer/Footer";
 import Header from "@/Components/Header/Header";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { getTxnStatus } from "@mintbase-js/rpc";
 import { NEXT_PUBLIC_NETWORK } from "@/config/constants";
+import { NFTStakeSection } from "@/Components/Account/Account";
 const Page = () => {
+  const [activeTable, setActiveTable] = useState<"tokens" | "nfts">("tokens");
   useEffect(() => {
     const checkAndParseTransactionHash = async () => {
       const searchParams = new URLSearchParams(window.location.search);
@@ -15,6 +17,8 @@ const Page = () => {
       const isNftUnStake = searchParams?.get("isNftUnStake") || "";
       const isClaimReward = searchParams?.get("isClaim") || "";
       const isNftClaimReward = searchParams?.get("isNftClaim") || "";
+      const isTokenStake = searchParams?.get("isStake") || "";
+      const isNftStake = searchParams?.get("isNftStake") || "";
       const accountId = searchParams?.get("senderId") || "";
 
       if (txnHash) {
@@ -25,6 +29,7 @@ const Page = () => {
           const rpcUrl = `https://rpc.${NEXT_PUBLIC_NETWORK}.near.org`;
 
           const txnStatus = await getTxnStatus(txnHash, senderId, rpcUrl);
+          console.log("staus", txnStatus);
 
           if (txnStatus === "success") {
             if (isUnStake) {
@@ -32,22 +37,33 @@ const Page = () => {
               window.history.replaceState(null, "", "/account");
             }
 
-            if (isClaimReward) {
+            if (isClaimReward && txnHash) {
               toast.success(
-                "You have received a reward for unstaking your tokens!"
+                "You have successfully claimed your rewards for tokens!"
               );
               window.history.replaceState(null, "", "/account");
             }
 
-            if (isNftUnStake) {
+            if (isNftUnStake && txnHash) {
               toast.success("You have successfully unstaked your NFTs!");
               window.history.replaceState(null, "", "/account");
             }
 
-            if (isNftClaimReward) {
+            if (isNftClaimReward && txnHash) {
               toast.success(
-                "You have received a reward for unstaking your NFTs!"
+                "You have successfully claimed your rewards for NFTs!"
               );
+              window.history.replaceState(null, "", "/account");
+            }
+            if (isTokenStake && txnHash) {
+              toast.success("Token staking successful!");
+              setActiveTable("tokens");
+              window.history.replaceState(null, "", "/account");
+            }
+
+            if (isNftStake && txnHash) {
+              toast.success("NFT staking successful!");
+              setActiveTable("nfts");
               window.history.replaceState(null, "", "/account");
             }
           } else {
@@ -70,7 +86,10 @@ const Page = () => {
       style={{ backgroundImage: "url('/images/bg.png')" }}
     >
       <Header />
-      <NFTStakeSection />
+      <NFTStakeSection
+        activeTable={activeTable}
+        setActiveTable={setActiveTable}
+      />
       <Footer />
       <Toaster />
     </div>
