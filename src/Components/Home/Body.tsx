@@ -28,7 +28,7 @@ const Body = () => {
   };
   return (
     <div
-      className="flex flex-col items-center min-h-screen text-white mt-[100px]"
+      className="flex flex-col items-center min-h-screen text-white pt-[100px]"
       id="home"
     >
       {signedAccountId ? (

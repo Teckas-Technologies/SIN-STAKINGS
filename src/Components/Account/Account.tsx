@@ -60,10 +60,11 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
 
   const { wallet, signedAccountId } = useContext(NearContext);
   const { balance } = useSinBalance({ wallet, signedAccountId });
-  const { stakingInfo, fetchStakingInfo, loading } = useStakingInfo(
-    wallet,
-    SIN_STAKING_CONTRACT_STAKE_INFO
-  );
+  const {
+    stakingInfo,
+    fetchStakingInfo,
+    loading: stakingLoading,
+  } = useStakingInfo(wallet, SIN_STAKING_CONTRACT_STAKE_INFO);
   const { nftStakingInfo, nftLoading, error, fetchNftStakingInfo } =
     useNftStakingInfo(wallet, SIN_STAKING_CONTRACT_NFT_STAKE_INFO);
   const { claimTokenRewards } = useClaimTokenRewards(
@@ -136,11 +137,14 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
   useEffect(() => {
     if (activeTable === "tokens" && signedAccountId) {
       fetchStakingInfo(signedAccountId);
+      console.log("signedAccount id", signedAccountId);
     }
-  }, [signedAccountId]);
+  }, [signedAccountId, activeTable]);
   useEffect(() => {
     if (activeTable === "nfts" && signedAccountId) {
       fetchNftStakingInfo(signedAccountId);
+      console.log("called nft");
+      
     }
   }, [activeTable, signedAccountId]);
 
@@ -383,7 +387,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                           month: "short",
                           year: "numeric",
                         });
-                        const lockupPeriod = staking.lockup_period / 86400; 
+                        const lockupPeriod = staking.lockup_period / 86400;
                         return (
                           <tr key={index}>
                             <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm ">
@@ -427,17 +431,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                           </tr>
                         );
                       })
-                    ) : stakingInfo && stakingInfo.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="px-4 py-8 text-center text-yellow-400 text-xs md:text-sm"
-                        >
-                          You haven&apos;t staked any tokens yet. Start staking
-                          to claim your rewards here.
-                        </td>
-                      </tr>
-                    ) : (
+                    ) : stakingLoading ? (
                       <tr>
                         <td colSpan={6} className="px-4 py-8 text-center">
                           <div className="flex justify-center items-center space-x-2">
@@ -446,6 +440,16 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                               Loading...
                             </span>
                           </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-4 py-8 text-center text-yellow-400 text-xs md:text-sm"
+                        >
+                          You haven&apos;t staked any tokens yet. Start staking
+                          to claim your rewards here.
                         </td>
                       </tr>
                     )

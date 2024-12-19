@@ -582,7 +582,7 @@ export default function StakeSection() {
           rel="noopener noreferrer"
         >
           <img
-            src="/images/Ref-finace.png"
+            src="/images/ref-finace.png"
             alt="Ref Finance"
             className="w-16 h-16 mx-auto mt-4"
           />

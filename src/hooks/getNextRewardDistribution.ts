@@ -24,7 +24,7 @@ export const useRewardDistribution = (
         method: "get_next_reward_distribution",
         args: {},
       });
-console.log("result",result);
+      console.log("result", result);
 
       setRewardDistribution(result);
     } catch (err) {

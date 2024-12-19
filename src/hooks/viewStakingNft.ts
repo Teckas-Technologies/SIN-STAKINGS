@@ -27,7 +27,7 @@ export const useNftStakingInfo = (
             staker_id: accountId,
           },
         });
-        console.log("result", result);
+        console.log("result staking", result);
 
         setNftStakingInfo(result);
       } catch (err) {
