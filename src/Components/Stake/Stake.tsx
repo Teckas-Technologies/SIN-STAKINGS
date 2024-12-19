@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { toast, Toaster } from "react-hot-toast";
@@ -112,13 +113,15 @@ export default function StakeSection() {
 
   const handleStake = async () => {
     if (!signedAccountId) {
-      toast.error("Please connect your wallet before stake your tokens!");
+      toast.error("Please connect your wallet before staking your tokens!");
       return;
     }
+
     if (!amount) {
       toast.error("Please enter the amount.");
       return;
     }
+
     if (isNaN(parseFloat(amount))) {
       toast.error("Please enter a valid amount.");
       return;
@@ -129,25 +132,27 @@ export default function StakeSection() {
       return;
     }
 
+    const lockupDays = {
+      "1-Month": 30,
+      "3-Month": 90,
+      "6-Month": 180,
+      "9-Month": 270,
+    }[selectedPeriod];
+
+    if (!lockupDays) {
+      toast.error("Invalid lock-up period selected.");
+      return;
+    }
+    console.log("Amount:", amount);
+    console.log("Signed Account ID:", signedAccountId);
+    console.log("Lockup Days:", lockupDays);
+
     try {
-      const lockupDays = {
-        "1-Month": 30,
-        "3-Month": 90,
-        "6-Month": 180,
-        "9-Month": 270,
-      }[selectedPeriod];
-
-      if (!lockupDays) {
-        toast.error("Invalid lock-up period selected.");
-        return;
-      }
-
       await stake(amount, signedAccountId, lockupDays);
-
       toast.success("Staking successful!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error staking:", error);
-      toast.error("Staking failed. Please try again.");
+      toast.error(`Staking failed: ${error.message || "Please try again."}`);
     }
   };
 
@@ -158,6 +163,25 @@ export default function StakeSection() {
     "9-Month": 100,
   };
   const { stakeNFTs } = useStakeNFTs(wallet, SIN_STAKING_CONTRACT_NFT_STAKE);
+  const handleNftStake = async () => {
+    if (!signedAccountId) {
+      toast.error("Please connect your wallet before stake your NFTs!");
+      return;
+    }
+    if (selectedNFTs.length === 0) {
+      toast.error("Please select an NFT to stake.");
+      return;
+    }
+
+    try {
+      const senderId = signedAccountId;
+      const result = await stakeNFTs(selectedNFTs, senderId);
+      console.log("Staked NFTs result:", result);
+    } catch (error) {
+      console.error("Error staking NFTs:", error);
+      toast.error("Staking failed. Please try again.");
+    }
+  };
   const handlePeriodSelection = (
     period: "1-Month" | "3-Month" | "6-Month" | "9-Month"
   ) => {
@@ -200,24 +224,7 @@ export default function StakeSection() {
       }
     });
   };
-  const handleNftStake = async () => {
-    if (!signedAccountId) {
-      toast.error("Please connect your wallet before stake your NFTs!");
-      return;
-    }
-    if (selectedNFTs.length === 0) {
-      toast.error("Please select an NFT to stake.");
-      return;
-    }
 
-    try {
-      const senderId = signedAccountId;
-      const result = await stakeNFTs(selectedNFTs, senderId);
-      console.log("Staked NFTs result:", result);
-    } catch (error) {
-      console.error("Error staking NFTs:", error);
-    }
-  };
   const searchParams = useSearchParams();
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -247,7 +254,7 @@ export default function StakeSection() {
   }
 
   return (
-    <div className="min-h-screen text-white flex flex-col items-center justify-center px-2 py-10 mt-[100px]">
+    <div className="min-h-screen text-white flex flex-col items-center justify-center px-2 py-10 pt-[100px]">
       {signedAccountId ? (
         <div className="w-[95%] md:w-[500px]">
           {" "}
@@ -573,7 +580,10 @@ export default function StakeSection() {
       </div>
 
       <div className="mt-10 text-center text-yellow-400">
-        <p style={{ fontFamily: "Garet-book" }} className="md:text-base text-xs font-semibold">
+        <p
+          style={{ fontFamily: "Garet-book" }}
+          className="md:text-base text-xs font-semibold"
+        >
           DONT HAVE $SIN? BUY SOME ON REF FINANCE
         </p>
         <a

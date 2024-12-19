@@ -39,7 +39,7 @@ export const useStake = (wallet: Wallet | undefined, contractId: string) => {
 
         return result;
       } catch (error) {
-        console.error("Error staking tokens:", error);
+        console.error(error);
         throw error;
       }
     },

@@ -272,7 +272,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
     }
   };
   return (
-    <div className="min-h-screen text-white flex flex-col items-center justify-center mt-[100px]">
+    <div className="min-h-screen text-white flex flex-col items-center justify-center pt-[100px]">
       {signedAccountId ? (
         <div className="w-[90%] md:w-[500px]">
           <div className="flex flex-row items-center justify-between mt-10 px-6 py-3 bg-[#f8b12c] rounded-full md:w-[500px]">
