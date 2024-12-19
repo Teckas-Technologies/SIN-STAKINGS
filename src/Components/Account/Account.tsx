@@ -391,7 +391,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                               {index + 1}
                             </td>
                             <td className="px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm truncate max-w-[120px] overflow-hidden whitespace-nowrap">
-                              {staking.staked_tokens}
+                              {formattedAmount}
                             </td>
                             <td className="px-4 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden sm:table-cell">
                               {lockupPeriod} Days
