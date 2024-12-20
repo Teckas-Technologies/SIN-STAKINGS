@@ -27,12 +27,17 @@ export const useStakingInfo = (
             staker_id: accountId,
           },
         });
-        console.log("result", result);
+        console.log("view staking token result", result);
 
         setStakingInfo(result);
-      } catch (err) {
-        console.error("Error fetching staking info:", err);
-        setError("Failed to fetch staking info");
+      } catch (err: any) {
+        if (err.message.includes("Staker not found")) {
+          setError(
+            "You haven't staked any tokens yet. Start staking to claim your rewards here."
+          );
+        } else {
+          setError("Failed to fetch staking info");
+        }
       } finally {
         setLoading(false);
       }

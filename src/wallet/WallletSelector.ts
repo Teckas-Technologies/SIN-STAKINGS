@@ -131,37 +131,20 @@ export class Wallet {
         const walletSelector = await this.selector;
         const { network } = walletSelector.options;
         const provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
-
+    
         try {
-            // Retrieve transaction result from the network
+            // Fetch the transaction status from the provider
             const transaction = await provider.txStatus(txhash, 'unused') as providers.FinalExecutionOutcome;
-            console.log("Res 1  >>", transaction);
-
-            if (this.isFinalExecutionStatusWithSuccessValue(transaction.status)) {
-                const signerId = transaction.transaction.signer_id;
-                const amount = transaction.transaction.actions[0].Transfer.deposit;
-
-                return {
-                    success: true,
-                    signerId,
-                    amount,
-                };
-            } else {
-                // Transaction failed
-                return { success: false };
-            }
+            console.log("Transaction Response >>", transaction);
+    
+            return transaction; // Return the entire transaction response
         } catch (error) {
             console.error("Transaction Error >>", error);
-            return { success: false };
+            throw error;
         }
-
-        // Retrieve transaction result from the network
-        // const transaction = await provider.txStatus(txhash, 'unnused');
-        // console.log("Res 1  >>", transaction)
-        // const res = await providers.getTransactionLastResult(transaction);
-        // console.log("Res 2  >>", res)
-        // return res;
     };
+    
+    
 
     getBalance = async (accountId: string) => {
         const walletSelector = await this.selector;

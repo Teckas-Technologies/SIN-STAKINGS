@@ -4,15 +4,16 @@
 import { toast, Toaster } from "react-hot-toast";
 import { useSinBalance } from "@/hooks/fetchSinBalance";
 import { useStake } from "@/hooks/useStake";
-import { NearContext } from "@/wallet/WallletSelector";
+import { NearContext, Wallet } from "@/wallet/WallletSelector";
 import { useSearchParams } from "next/navigation";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useClaimTokenRewards } from "@/hooks/useClaimTokenRewards";
-
+import { getTxnStatus } from "@mintbase-js/rpc";
 import useFetchNFTMedia from "@/hooks/useFeed";
 import "./Stake.css";
 import Loader from "../Loader/Loader";
 import {
+  NEXT_PUBLIC_NETWORK,
   SIN_STAKING_CONTRACT_BALANCE,
   SIN_STAKING_CONTRACT_CLAIM_NFT_REWARDS,
   SIN_STAKING_CONTRACT_CLAIM_REWARDS,
@@ -24,12 +25,18 @@ import {
 import { useStakingInfo } from "@/hooks/viewStakingToken";
 import { useStakeNFTs } from "@/hooks/stakeNft";
 import { useLastRewardDistribution } from "@/hooks/getLastRewardDistribution";
+import { useNftApprove } from "@/hooks/approveNftStake";
+import { useNftTransferCall } from "@/hooks/transferNftstake";
+import { useTransactionDetails } from "@/hooks/getTransactionHash";
+
 export default function StakeSection() {
   const { wallet, signedAccountId } = useContext(NearContext);
   const { balance } = useSinBalance({ wallet, signedAccountId });
   const [selectedPeriod, setSelectedPeriod] = useState<
     "1-Month" | "3-Month" | "6-Month" | "9-Month" | null
   >(null);
+  const [isApprove, setIsApprove] = useState(false);
+  const [transactionHash, setTransactionHash] = useState<string | null>(null);
   const [selectedNFTs, setSelectedNFTs] = useState<string[]>([]);
   const [currentTab, setCurrentTab] = useState<"STAKE_SIN" | "STAKE_NFT">(
     "STAKE_SIN"
@@ -45,7 +52,7 @@ export default function StakeSection() {
   );
   const nft_contract_id = SIN_STAKING_CONTRACT_SHOW_NFTS;
   const ownerId = signedAccountId;
-  console.log("ownerId:", ownerId);
+
   const { nfts, loading, error, fetchNFTData, hasMore } = useFetchNFTMedia({
     nft_contract_id: nft_contract_id,
     owner: ownerId,
@@ -143,9 +150,6 @@ export default function StakeSection() {
       toast.error("Invalid lock-up period selected.");
       return;
     }
-    console.log("Amount:", amount);
-    console.log("Signed Account ID:", signedAccountId);
-    console.log("Lockup Days:", lockupDays);
 
     try {
       await stake(amount, signedAccountId, lockupDays);
@@ -162,26 +166,129 @@ export default function StakeSection() {
     "6-Month": 75,
     "9-Month": 100,
   };
-  const { stakeNFTs } = useStakeNFTs(wallet, SIN_STAKING_CONTRACT_NFT_STAKE);
-  const handleNftStake = async () => {
-    if (!signedAccountId) {
-      toast.error("Please connect your wallet before stake your NFTs!");
-      return;
-    }
-    if (selectedNFTs.length === 0) {
-      toast.error("Please select an NFT to stake.");
-      return;
-    }
 
+  // const handleNftStake = async () => {
+  //   if (!signedAccountId) {
+  //     toast.error("Please connect your wallet before stake your NFTs!");
+  //     return;
+  //   }
+  //   if (selectedNFTs.length === 0) {
+  //     toast.error("Please select an NFT to stake.");
+  //     return;
+  //   }
+
+  //   try {
+  //     const senderId = signedAccountId;
+  //     const result = await stakeNFTs(selectedNFTs, senderId);
+  //     console.log("Staked NFTs result:", result);
+  //   } catch (error) {
+  //     console.error("Error staking NFTs:", error);
+  //     toast.error("Staking failed. Please try again.");
+  //   }
+  // };
+  const { approveNft } = useNftApprove(wallet, "artbattle.mintspace2.testnet");
+  const { transferNft } = useNftTransferCall(
+    wallet,
+    "artbattle.mintspace2.testnet"
+  );
+
+  const handleNftStake = async () => {
     try {
-      const senderId = signedAccountId;
-      const result = await stakeNFTs(selectedNFTs, senderId);
-      console.log("Staked NFTs result:", result);
+      for (const tokenId of selectedNFTs) {
+        const receiverContractId = "sin-nft-contract-account23.testnet";
+
+        const approveResult = await approveNft(
+          tokenId,
+          receiverContractId,
+          signedAccountId
+        );
+        console.log(`NFT approved successfully:`, approveResult);
+      }
+
+      alert("All selected NFTs staked successfully!");
     } catch (error) {
       console.error("Error staking NFTs:", error);
-      toast.error("Staking failed. Please try again.");
+      alert("Failed to stake one or more NFTs. Please try again.");
     }
   };
+
+  const { getTransactionDetails, approveId, tokenIds } = useTransactionDetails(wallet);
+
+  useEffect(() => {
+    console.log("Extracting query parameters from URL...");
+    const params = new URLSearchParams(window.location.search);
+    const isApproveParam = params.get("isApprove") === "true";
+    const transactionHashes = params.get("transactionHashes");
+  
+    console.log("isApprove:", isApproveParam);
+    console.log("transactionHashes:", transactionHashes);
+  
+    setIsApprove(isApproveParam);
+    setTransactionHash(transactionHashes);
+  }, []);
+  
+  // Fetch transaction details and approvalId if `isApprove` is true
+  useEffect(() => {
+    const fetchAndHandleTransaction = async () => {
+      console.log("Starting fetchAndHandleTransaction...");
+      console.log("isApprove:", isApprove);
+      console.log("transactionHash:", transactionHash);
+  
+      if (isApprove && transactionHash) {
+        try {
+          console.log("Fetching transaction details...");
+          const { transaction, approvalId, tokenIds: fetchedTokenIds } = await getTransactionDetails(transactionHash);
+  
+          console.log("Transaction Details:", transaction);
+          console.log("Fetched Approval ID:", approvalId);
+          console.log("Fetched Token IDs:", fetchedTokenIds);
+  
+          if (approvalId && fetchedTokenIds.length > 0) {
+            console.log("Approval ID and Token IDs found, proceeding to handleClick...");
+            await handleClick(approvalId, fetchedTokenIds);
+          } else {
+            console.error("Approval ID or Token IDs not found in the transaction logs.");
+          }
+        } catch (error) {
+          console.error("Error fetching transaction details:", error);
+        }
+      } else {
+        console.log("isApprove is false or transactionHash is null. Skipping fetch.");
+      }
+    };
+  
+    fetchAndHandleTransaction();
+  }, [isApprove, transactionHash, getTransactionDetails]);
+  
+  // Function to handle NFT transfer
+  const handleClick = async (approvalId: number, selectedNFTs: string[]) => {
+    console.log("Starting handleClick with approvalId:", approvalId);
+    console.log("Selected NFTs for transfer:", selectedNFTs);
+  
+    const receiverContractId = "sin-nft-contract-account23.testnet";
+  
+    for (const tokenId of selectedNFTs) {
+      console.log(`Initiating transfer for tokenId: ${tokenId}`);
+      try {
+        const transferResult = await transferNft(
+          tokenId,
+          approvalId,
+          receiverContractId,
+          signedAccountId
+        );
+        console.log(
+          `NFT transfer successful for tokenId: ${tokenId}`,
+          transferResult
+        );
+      } catch (error) {
+        console.error(
+          `Error transferring NFT with tokenId: ${tokenId}`,
+          error
+        );
+      }
+    }
+  };
+  
   const handlePeriodSelection = (
     period: "1-Month" | "3-Month" | "6-Month" | "9-Month"
   ) => {
@@ -594,7 +701,7 @@ export default function StakeSection() {
           <img
             src="/images/ref-finace.png"
             alt="Ref Finance"
-            className="w-16 h-16 mx-auto mt-4"
+            className="w-[40px] h-[40px] md:w-[60px] md:h-[60px] mx-auto mt-4"
           />
         </a>
       </div>

@@ -30,9 +30,14 @@ export const useNftStakingInfo = (
         console.log("result staking", result);
 
         setNftStakingInfo(result);
-      } catch (err) {
-        console.error("Error fetching staking info:", err);
-        setError("Failed to fetch staking info");
+      } catch (err: any) {
+        if (err.message.includes("Staker not found")) {
+          setError(
+            "No NFTs staked yet. Stake your NFTs to earn rewards."
+          );
+        } else {
+          setError("Failed to fetch staking info");
+        }
       } finally {
         setNftLoading(false);
       }

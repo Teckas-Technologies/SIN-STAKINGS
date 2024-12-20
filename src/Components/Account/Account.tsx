@@ -64,9 +64,14 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
     stakingInfo,
     fetchStakingInfo,
     loading: stakingLoading,
+    error: stakinginfoerror,
   } = useStakingInfo(wallet, SIN_STAKING_CONTRACT_STAKE_INFO);
-  const { nftStakingInfo, nftLoading, error, fetchNftStakingInfo } =
-    useNftStakingInfo(wallet, SIN_STAKING_CONTRACT_NFT_STAKE_INFO);
+  const {
+    nftStakingInfo,
+    nftLoading,
+    error: nftStakingerror,
+    fetchNftStakingInfo,
+  } = useNftStakingInfo(wallet, SIN_STAKING_CONTRACT_NFT_STAKE_INFO);
   const { claimTokenRewards } = useClaimTokenRewards(
     wallet,
     SIN_STAKING_CONTRACT_CLAIM_REWARDS
@@ -144,7 +149,6 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
     if (activeTable === "nfts" && signedAccountId) {
       fetchNftStakingInfo(signedAccountId);
       console.log("called nft");
-      
     }
   }, [activeTable, signedAccountId]);
 
@@ -201,17 +205,17 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
       staking.start_timestamp / 1000000 + staking.lockup_period * 1000; // Convert lockup period to milliseconds
 
     // Check if the lockup period is completed
-    if (currentTime < lockupEndTime) {
-      const unlockDate = new Date(lockupEndTime).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-      toast.error(
-        `Lockup period not completed. You can unstake your tokens after ${unlockDate}.`
-      );
-      return;
-    }
+    // if (currentTime < lockupEndTime) {
+    //   const unlockDate = new Date(lockupEndTime).toLocaleDateString("en-GB", {
+    //     day: "2-digit",
+    //     month: "short",
+    //     year: "numeric",
+    //   });
+    //   toast.error(
+    //     `Lockup period not completed. You can unstake your tokens after ${unlockDate}.`
+    //   );
+    //   return;
+    // }
 
     // If lockup period is completed and tokenReward is 0
     if (tokenReward === 0) {
@@ -271,6 +275,8 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
       console.error("Error unstaking:", error);
     }
   };
+  console.log("staking error", stakinginfoerror);
+
   return (
     <div className="min-h-screen text-white flex flex-col items-center justify-center pt-[100px]">
       {signedAccountId ? (
@@ -443,13 +449,14 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                         </td>
                       </tr>
                     ) : (
+                      // Display error if no staking info is found
                       <tr>
                         <td
                           colSpan={6}
                           className="px-4 py-8 text-center text-yellow-400 text-xs md:text-sm"
                         >
-                          You haven&apos;t staked any tokens yet. Start staking
-                          to claim your rewards here.
+                          {stakinginfoerror ||
+                            "You haven't staked any tokens yet. Start staking to claim your rewards here."}
                         </td>
                       </tr>
                     )
@@ -588,7 +595,9 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                           colSpan={10}
                           className="px-4 py-8 text-center text-yellow-400 text-xs md:text-sm"
                         >
-                          No NFTs staked yet. Stake your NFTs to earn rewards.
+                          {nftStakingerror
+                            ? nftStakingerror
+                            : "No NFTs staked yet. Stake your NFTs to earn rewards."}
                         </td>
                       </tr>
                     )
@@ -687,7 +696,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
           <img
             src="/images/mitte.png"
             alt="Mitte Logo"
-            className="h-[60px] w-[60px] mx-auto mt-4 mb-3"
+            className="md:h-[60px] md:w-[60px] h-[40px] w-[40px] mx-auto mt-4 mb-3"
           />
         </a>
       </div>
