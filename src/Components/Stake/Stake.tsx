@@ -28,8 +28,12 @@ import { useLastRewardDistribution } from "@/hooks/getLastRewardDistribution";
 import { useNftApprove } from "@/hooks/approveNftStake";
 import { useNftTransferCall } from "@/hooks/transferNftstake";
 import { useTransactionDetails } from "@/hooks/getTransactionHash";
+interface StakeSectionProps {
+  setCurrentTab: (value: "STAKE_SIN" | "STAKE_NFT") => void; // Replace `any` with a more specific type if possible
+  currentTab: "STAKE_SIN" | "STAKE_NFT"; // Replace `any` with a specific type if known
+}
 
-export default function StakeSection() {
+export const StakeSection: React.FC<StakeSectionProps> = ({ setCurrentTab, currentTab }) => {
   const { wallet, signedAccountId } = useContext(NearContext);
   const { balance } = useSinBalance({ wallet, signedAccountId });
   const [selectedPeriod, setSelectedPeriod] = useState<
@@ -38,9 +42,7 @@ export default function StakeSection() {
   const [isApprove, setIsApprove] = useState(false);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
   const [selectedNFTs, setSelectedNFTs] = useState<string[]>([]);
-  const [currentTab, setCurrentTab] = useState<"STAKE_SIN" | "STAKE_NFT">(
-    "STAKE_SIN"
-  );
+ 
   const [activeSection, setActiveSection] = useState<"stake" | "unstake">(
     "stake"
   );
