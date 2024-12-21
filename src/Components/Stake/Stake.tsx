@@ -189,13 +189,13 @@ export default function StakeSection() {
   const { approveNft } = useNftApprove(wallet, "artbattle.mintspace2.testnet");
   const { transferNft } = useNftTransferCall(
     wallet,
-    "artbattle.mintspace2.testnet"
+    SIN_STAKING_CONTRACT_SHOW_NFTS
   );
 
   const handleNftStake = async () => {
     try {
       for (const tokenId of selectedNFTs) {
-        const receiverContractId = "sin-nft-contract-account23.testnet";
+        const receiverContractId = SIN_STAKING_CONTRACT_NFT_STAKE;
 
         const approveResult = await approveNft(
           tokenId,
@@ -212,61 +212,72 @@ export default function StakeSection() {
     }
   };
 
-  const { getTransactionDetails, approveId, tokenIds } = useTransactionDetails(wallet);
+  const { getTransactionDetails, approveId, tokenIds } =
+    useTransactionDetails(wallet);
 
   useEffect(() => {
     console.log("Extracting query parameters from URL...");
     const params = new URLSearchParams(window.location.search);
     const isApproveParam = params.get("isApprove") === "true";
     const transactionHashes = params.get("transactionHashes");
-  
+
     console.log("isApprove:", isApproveParam);
     console.log("transactionHashes:", transactionHashes);
-  
+
     setIsApprove(isApproveParam);
     setTransactionHash(transactionHashes);
   }, []);
-  
+
   // Fetch transaction details and approvalId if `isApprove` is true
   useEffect(() => {
     const fetchAndHandleTransaction = async () => {
       console.log("Starting fetchAndHandleTransaction...");
       console.log("isApprove:", isApprove);
       console.log("transactionHash:", transactionHash);
-  
+
       if (isApprove && transactionHash) {
         try {
           console.log("Fetching transaction details...");
-          const { transaction, approvalId, tokenIds: fetchedTokenIds } = await getTransactionDetails(transactionHash);
-  
+          const {
+            transaction,
+            approvalId,
+            tokenIds: fetchedTokenIds,
+          } = await getTransactionDetails(transactionHash);
+
           console.log("Transaction Details:", transaction);
           console.log("Fetched Approval ID:", approvalId);
           console.log("Fetched Token IDs:", fetchedTokenIds);
-  
+
           if (approvalId && fetchedTokenIds.length > 0) {
-            console.log("Approval ID and Token IDs found, proceeding to handleClick...");
+            console.log(
+              "Approval ID and Token IDs found, proceeding to handleClick..."
+            );
             await handleClick(approvalId, fetchedTokenIds);
           } else {
-            console.error("Approval ID or Token IDs not found in the transaction logs.");
+            console.error(
+              "Approval ID or Token IDs not found in the transaction logs."
+            );
           }
         } catch (error) {
           console.error("Error fetching transaction details:", error);
         }
       } else {
-        console.log("isApprove is false or transactionHash is null. Skipping fetch.");
+        console.log(
+          "isApprove is false or transactionHash is null. Skipping fetch."
+        );
       }
     };
-  
+
     fetchAndHandleTransaction();
   }, [isApprove, transactionHash, getTransactionDetails]);
-  
+
   // Function to handle NFT transfer
   const handleClick = async (approvalId: number, selectedNFTs: string[]) => {
     console.log("Starting handleClick with approvalId:", approvalId);
     console.log("Selected NFTs for transfer:", selectedNFTs);
-  
-    const receiverContractId = "sin-nft-contract-account23.testnet";
-  
+
+    const receiverContractId = SIN_STAKING_CONTRACT_NFT_STAKE;
+
     for (const tokenId of selectedNFTs) {
       console.log(`Initiating transfer for tokenId: ${tokenId}`);
       try {
@@ -281,14 +292,11 @@ export default function StakeSection() {
           transferResult
         );
       } catch (error) {
-        console.error(
-          `Error transferring NFT with tokenId: ${tokenId}`,
-          error
-        );
+        console.error(`Error transferring NFT with tokenId: ${tokenId}`, error);
       }
     }
   };
-  
+
   const handlePeriodSelection = (
     period: "1-Month" | "3-Month" | "6-Month" | "9-Month"
   ) => {
@@ -320,14 +328,27 @@ export default function StakeSection() {
       setPercentage(0); // Reset to 0 if input is invalid
     }
   };
+  // const toggleSelectNFT = (token_id: string) => {
+  //   console.log("Selected NFT token_id:", token_id);
+
+  //   setSelectedNFTs((prevSelectedNFTs) => {
+  //     if (prevSelectedNFTs.includes(token_id)) {
+  //       return prevSelectedNFTs.filter((id) => id !== token_id);
+  //     } else {
+  //       return [...prevSelectedNFTs, token_id];
+  //     }
+  //   });
+  // };
   const toggleSelectNFT = (token_id: string) => {
     console.log("Selected NFT token_id:", token_id);
 
     setSelectedNFTs((prevSelectedNFTs) => {
       if (prevSelectedNFTs.includes(token_id)) {
-        return prevSelectedNFTs.filter((id) => id !== token_id);
+        // Deselect if already selected
+        return [];
       } else {
-        return [...prevSelectedNFTs, token_id];
+        // Select the new NFT, deselect others
+        return [token_id];
       }
     });
   };
@@ -610,39 +631,46 @@ export default function StakeSection() {
                 ref={containerRef}
               >
                 {nfts.length > 0 && (
-                  <div className="grid grid-cols-4 md:gap-5 gap-2 mb-6 ">
-                    {nfts.map((nft, index) => (
-                      <div
-                        key={index}
-                        className="relative cursor-pointer"
-                        onClick={() => toggleSelectNFT(nft.token_id)}
-                      >
-                        <img
-                          src={nft.media || "/images/mintbase.png"}
-                          alt={`NFT ${index + 1}`}
-                          className="rounded-lg md:w-[100px] md:h-[90px] w-[100px] h-[70px]"
-                        />
+                  <div className="grid grid-cols-4 md:gap-5 gap-2 mb-6">
+                    {nfts.map((nft, index) => {
+                      const isSelected = selectedNFTs.includes(nft.token_id);
+                      const isDisabled = selectedNFTs.length > 0 && !isSelected;
+
+                      return (
                         <div
-                          className="absolute bottom-2 right-2 h-4 w-4 rounded-sm flex items-center justify-center bg-black"
-                          style={{ border: "1px solid #eeb636" }}
+                          key={index}
+                          className={`relative cursor-pointer ${
+                            isDisabled ? "opacity-30 pointer-events-none" : ""
+                          }`}
+                          onClick={() => toggleSelectNFT(nft.token_id)}
                         >
-                          {selectedNFTs.includes(nft.token_id) && (
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4 text-yellow-500"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          )}
+                          <img
+                            src={nft.media || "/images/mintbase.png"}
+                            alt={`NFT ${index + 1}`}
+                            className="rounded-lg md:w-[100px] md:h-[90px] w-[100px] h-[70px]"
+                          />
+                          <div
+                            className="absolute bottom-2 right-2 h-4 w-4 rounded-sm flex items-center justify-center bg-black"
+                            style={{ border: "1px solid #eeb636" }}
+                          >
+                            {isSelected && (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4 text-yellow-500"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {loading && (
                       <div className="flex items-center justify-center">
                         <Loader />
@@ -656,14 +684,6 @@ export default function StakeSection() {
                         Failed to load NFT
                       </p>
                     )}
-                    {/* {!hasMore && (
-                  <p
-                    className="flex items-center justify-center text-gray-500 text-center text-xs"
-                    style={{ fontFamily: "montserrat-variablefont" }}
-                  >
-                    No more NFT&apos;s to load
-                  </p>
-                )} */}
                   </div>
                 )}
               </div>
