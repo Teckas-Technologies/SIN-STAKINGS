@@ -33,7 +33,10 @@ interface StakeSectionProps {
   currentTab: "STAKE_SIN" | "STAKE_NFT"; // Replace `any` with a specific type if known
 }
 
-export const StakeSection: React.FC<StakeSectionProps> = ({ setCurrentTab, currentTab }) => {
+export const StakeSection: React.FC<StakeSectionProps> = ({
+  setCurrentTab,
+  currentTab,
+}) => {
   const { wallet, signedAccountId } = useContext(NearContext);
   const { balance } = useSinBalance({ wallet, signedAccountId });
   const [selectedPeriod, setSelectedPeriod] = useState<
@@ -42,7 +45,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({ setCurrentTab, curre
   const [isApprove, setIsApprove] = useState(false);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
   const [selectedNFTs, setSelectedNFTs] = useState<string[]>([]);
- 
+
   const [activeSection, setActiveSection] = useState<"stake" | "unstake">(
     "stake"
   );
@@ -136,24 +139,25 @@ export const StakeSection: React.FC<StakeSectionProps> = ({ setCurrentTab, curre
       return;
     }
 
-    if (!selectedPeriod) {
-      toast.error("Please select a lock-up period.");
-      return;
-    }
+    // if (!selectedPeriod) {
+    //   toast.error("Please select a lock-up period.");
+    //   return;
+    // }
 
-    const lockupDays = {
-      "1-Month": 30,
-      "3-Month": 90,
-      "6-Month": 180,
-      "9-Month": 270,
-    }[selectedPeriod];
+    // const lockupDays = {
+    //   "1-Month": 30,
+    //   "3-Month": 90,
+    //   "6-Month": 180,
+    //   "9-Month": 270,
+    // }[selectedPeriod];
 
-    if (!lockupDays) {
-      toast.error("Invalid lock-up period selected.");
-      return;
-    }
+    // if (!lockupDays) {
+    //   toast.error("Invalid lock-up period selected.");
+    //   return;
+    // }
 
     try {
+      const lockupDays = 30;
       await stake(amount, signedAccountId, lockupDays);
       toast.success("Staking successful!");
     } catch (error: any) {
@@ -478,14 +482,15 @@ export const StakeSection: React.FC<StakeSectionProps> = ({ setCurrentTab, curre
                 </span>
               </h4>
 
-              <div className="flex flex-row items-center justify-between">
+              <div className="flex flex-row items-center justify-center">
                 <h2
                   className="text-center text-yellow-400 font-semibold mb-4 text-xs md:text-sm"
                   style={{ fontFamily: "montserrat-variablefont" }}
                 >
-                  CHOOSE A LOCK-UP PERIOD
+                  DEFAULT LOCK-UP PERIOD:
+                  <span className="font-bold text-lg text-[#a16207]" style={{ fontFamily: "montserrat-variablefont" }}> 1 MONTH</span>
                 </h2>
-                <div
+                {/* <div
                   className="text-center bg-black text-yellow-500 font-bold rounded-lg md:text-sm text-xs md:px-4 px-2 py-2 mb-6"
                   style={{
                     border: "1px solid #eeb636",
@@ -493,9 +498,9 @@ export const StakeSection: React.FC<StakeSectionProps> = ({ setCurrentTab, curre
                   }}
                 >
                   Est APR: 118%
-                </div>
+                </div> */}
               </div>
-              <div className="grid grid-cols-4 gap-2 mb-4 text-center">
+              {/* <div className="grid grid-cols-4 gap-2 mb-4 text-center">
                 {Object.keys(periods).map((period) => (
                   <div key={period}>
                     <button
@@ -529,7 +534,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({ setCurrentTab, curre
                     </p>
                   </div>
                 ))}
-              </div>
+              </div> */}
             </div>
 
             <div className="mb-6 mt-9 relative w-full h-1 bg-yellow-400 rounded-lg">
@@ -730,4 +735,4 @@ export const StakeSection: React.FC<StakeSectionProps> = ({ setCurrentTab, curre
       <Toaster />
     </div>
   );
-}
+};
