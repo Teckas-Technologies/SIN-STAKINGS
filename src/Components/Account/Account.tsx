@@ -393,7 +393,10 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                           month: "short",
                           year: "numeric",
                         });
-                        const lockupPeriod = staking.lockup_period / 86400;
+                        // const lockupPeriod = `${staking.lockup_period / 86400} days`; // Convert to days and append "days"
+                        const lockupPeriod = "30 days";
+                        console.log("log >>>>>>>>>", lockupPeriod);
+                        
                         return (
                           <tr key={index}>
                             <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm ">
@@ -403,7 +406,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                               {formattedAmount}
                             </td>
                             <td className="px-4 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden sm:table-cell">
-                              {lockupPeriod} Days
+                              {lockupPeriod}
                             </td>
                             <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden sm:table-cell">
                               {dateStaked}

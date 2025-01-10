@@ -158,7 +158,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
 
     try {
       const lockupDays = 30;
-      await stake(amount, signedAccountId, lockupDays);
+      await stake(amount, signedAccountId);
       toast.success("Staking successful!");
     } catch (error: any) {
       console.error("Error staking:", error);
