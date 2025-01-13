@@ -198,6 +198,15 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
 
   const handleNftStake = async () => {
     try {
+      if (!signedAccountId) {
+        toast.error("Please connect your wallet to continue.");
+        return;
+      }
+
+      if (!selectedNFTs || selectedNFTs.length === 0) {
+        toast.error("Please select at least one NFT to stake.");
+        return;
+      }
       for (const tokenId of selectedNFTs) {
         const receiverContractId = SIN_STAKING_CONTRACT_NFT_STAKE;
 
@@ -713,8 +722,13 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
               style={{ fontFamily: "montserrat-variablefont" }}
             >
               <button
-                className="bg-yellow-500 text-[#3b2d2f] font-bold md:px-[40px] px-4 md:text-sm text-xs py-2 rounded-full shadow-md hover:bg-yellow-600"
+                className={`font-bold md:px-[40px] px-4 md:text-sm text-xs py-2 rounded-full shadow-md ${
+                  nfts.length === 0
+                    ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                    : "bg-yellow-500 text-[#3b2d2f] hover:bg-yellow-600"
+                }`}
                 onClick={handleNftStake}
+                disabled={nfts.length === 0}
               >
                 STAKE
               </button>
