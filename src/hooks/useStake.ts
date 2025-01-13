@@ -2,7 +2,7 @@
 import { useCallback } from "react";
 import { Wallet } from "@/wallet/WallletSelector";
 import { utils } from "near-api-js"; // Utility functions for NEAR amounts
-import { SIN_STAKING_CONTRACT_STAKE_INFO, SIN_STAKING_CONTRACT_TOKENSTAKE_RECEIVER } from "@/config/constants";
+import { SIN_STAKING_CONTRACT_TOKEN_STAKE } from "@/config/constants";
 
 export const useStake = (wallet: Wallet | undefined, contractId: string) => {
   const stake = useCallback(
@@ -20,17 +20,18 @@ export const useStake = (wallet: Wallet | undefined, contractId: string) => {
           throw new Error("Invalid amount entered");
         }
 
-       
         // const msg = JSON.stringify({ lockup_days: lockupPeriodInDays });
-        const msg = 'Staking Tokens';
+        const msg = "Staking Tokens";
         // Call the smart contract method
-        const callbackUrl = `${window.location.origin}/account?isStake=true&senderId=${encodeURIComponent(senderId)}`;
+        const callbackUrl = `${
+          window.location.origin
+        }/account?isStake=true&senderId=${encodeURIComponent(senderId)}`;
         const result = await wallet.callMethod({
           contractId,
           callbackUrl,
           method: "ft_transfer_call",
           args: {
-            receiver_id: SIN_STAKING_CONTRACT_TOKENSTAKE_RECEIVER, // Specify the receiver contract account
+            receiver_id: SIN_STAKING_CONTRACT_TOKEN_STAKE, // Specify the receiver contract account
             amount: yoctoAmount, // Amount to transfer
             msg,
           },
