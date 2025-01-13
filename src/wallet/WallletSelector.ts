@@ -12,7 +12,7 @@ import type { Context } from 'react';
 import { createContext } from 'react';
 import { distinctUntilChanged, map } from 'rxjs';
 import { NetworkId } from '@/types/type';
-import { SIN_STAKING_CONTRACT } from '@/config/constants';
+import { NETWORK_ID, SIN_STAKING_CONTRACT } from '@/config/constants';
 
 
 const THIRTY_TGAS = '30000000000000';
@@ -24,7 +24,7 @@ export class Wallet {
     selector!: Promise<WalletSelector>;
 
     constructor({
-        networkId = "testnet",
+        networkId = NETWORK_ID,
         createAccessKeyFor = SIN_STAKING_CONTRACT,
     }: {
         networkId: NetworkId;
