@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { SIN_STAKING_CONTRACT } from "@/config/constants";
+import { NETWORK_ID, SIN_STAKING_CONTRACT } from "@/config/constants";
 import { NearContext, Wallet } from "@/wallet/WallletSelector";
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -10,7 +10,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     const walletInstance = new Wallet({
-      networkId: "testnet",
+      networkId: NETWORK_ID,
       createAccessKeyFor: SIN_STAKING_CONTRACT,
     });
     walletInstance.startUp(setSignedAccountId);
