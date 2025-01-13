@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  SIN_STAKING_CONTRACT_CLAIM_NFT_REWARDS,
-  SIN_STAKING_CONTRACT_CLAIM_REWARDS,
   SIN_STAKING_CONTRACT_NFT_STAKE,
-  SIN_STAKING_CONTRACT_NFT_STAKE_INFO,
-  SIN_STAKING_CONTRACT_STAKE_INFO,
+  SIN_STAKING_CONTRACT_TOKEN_STAKE,
 } from "@/config/constants";
 import { useSinBalance } from "@/hooks/fetchSinBalance";
 import { useStakingInfo } from "@/hooks/viewStakingToken";
@@ -20,6 +17,7 @@ import { useClaimNftRewards } from "@/hooks/useClaimNftRewards";
 import { useUnstakeNfts } from "@/hooks/useUnstakeNft";
 import { useRewardDistribution } from "@/hooks/getNextRewardDistribution";
 import { useSearchParams } from "next/navigation";
+import { useUserRewards } from "@/hooks/viewTokens";
 
 interface StakingInfo {
   staked_tokens: string;
@@ -65,22 +63,22 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
     fetchStakingInfo,
     loading: stakingLoading,
     error: stakinginfoerror,
-  } = useStakingInfo(wallet, SIN_STAKING_CONTRACT_STAKE_INFO);
+  } = useStakingInfo(wallet, SIN_STAKING_CONTRACT_TOKEN_STAKE);
   const {
     nftStakingInfo,
     nftLoading,
     error: nftStakingerror,
     fetchNftStakingInfo,
-  } = useNftStakingInfo(wallet, SIN_STAKING_CONTRACT_NFT_STAKE_INFO);
+  } = useNftStakingInfo(wallet, SIN_STAKING_CONTRACT_NFT_STAKE);
   const { claimTokenRewards } = useClaimTokenRewards(
     wallet,
-    SIN_STAKING_CONTRACT_CLAIM_REWARDS
+    SIN_STAKING_CONTRACT_TOKEN_STAKE
   );
   const { claimNftRewards } = useClaimNftRewards(
     wallet,
-    SIN_STAKING_CONTRACT_CLAIM_NFT_REWARDS
+    SIN_STAKING_CONTRACT_NFT_STAKE
   );
-  const { unstake } = useUnstake(wallet, SIN_STAKING_CONTRACT_STAKE_INFO);
+  const { unstake } = useUnstake(wallet, SIN_STAKING_CONTRACT_TOKEN_STAKE);
   const { unstakeNfts } = useUnstakeNfts(
     wallet,
     SIN_STAKING_CONTRACT_NFT_STAKE
@@ -117,8 +115,8 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
     return sinBalance.toFixed(8); // Display up to 8 decimal places
   };
 
-  const tokenContractId = SIN_STAKING_CONTRACT_CLAIM_REWARDS;
-  const nftContractId = SIN_STAKING_CONTRACT_CLAIM_NFT_REWARDS;
+  const tokenContractId = SIN_STAKING_CONTRACT_TOKEN_STAKE;
+  const nftContractId = SIN_STAKING_CONTRACT_NFT_STAKE;
   const {
     rewardDistribution: nftReward,
     loading: nftRewardLoading,
@@ -205,17 +203,17 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
       staking.start_timestamp / 1000000 + staking.lockup_period * 1000; // Convert lockup period to milliseconds
 
     // Check if the lockup period is completed
-    // if (currentTime < lockupEndTime) {
-    //   const unlockDate = new Date(lockupEndTime).toLocaleDateString("en-GB", {
-    //     day: "2-digit",
-    //     month: "short",
-    //     year: "numeric",
-    //   });
-    //   toast.error(
-    //     `Lockup period not completed. You can unstake your tokens after ${unlockDate}.`
-    //   );
-    //   return;
-    // }
+    if (currentTime < lockupEndTime) {
+      const unlockDate = new Date(lockupEndTime).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+      toast.error(
+        `Lockup period not completed. You can unstake your tokens after ${unlockDate}.`
+      );
+      return;
+    }
 
     // If lockup period is completed and tokenReward is 0
     if (tokenReward === 0) {
@@ -276,7 +274,18 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
     }
   };
   console.log("staking error", stakinginfoerror);
+  const { userRewards, loading, error, fetchUserRewards } = useUserRewards(
+    wallet,
+    SIN_STAKING_CONTRACT_TOKEN_STAKE
+  );
 
+  // Call the hook with a specific staker ID
+  useEffect(() => {
+    if (wallet && signedAccountId) {
+      fetchUserRewards(signedAccountId);
+      console.log("log signedAccount", signedAccountId);
+    }
+  }, [wallet, signedAccountId]);
   return (
     <div className="min-h-screen text-white flex flex-col items-center justify-center pt-[100px]">
       {signedAccountId ? (
@@ -356,266 +365,330 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
 
           <div className="w-full mt-4 bg-transparent flex items-center justify-center p-3">
             {activeTable === "tokens" && (
-              <table className="table-auto w-full text-left">
-                <thead>
-                  <tr>
-                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center">
-                      S.NO
-                    </th>
-                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center md:w-[160px] w-[134px]">
-                      Staked Tokens
-                    </th>
-                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
-                      Lockup Period
-                    </th>
-                    <th className="md:px-4 px-2 py-2 text-[12px] md:text-sm border-b text-yellow-700 text-center hidden md:table-cell">
-                      Date of Staked
-                    </th>
-                    <th className="md:px-4 px-2 py-2 text-[12px] md:text-sm border-b text-yellow-700 text-center">
-                      Reward
-                    </th>
-                    <th className="md:px-4 px-2 py-2 text-[12px] md:text-sm border-b text-yellow-700 text-center">
-                      Unstake
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {signedAccountId ? (
-                    stakingInfo && stakingInfo.length > 0 ? (
-                      stakingInfo.map((staking: StakingInfo, index: number) => {
-                        const formattedAmount = formatYoctoAmount(
-                          staking.staked_tokens.toString()
-                        );
-                        const dateStaked = new Date(
-                          staking.start_timestamp / 1000000
-                        ).toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        });
-                        // const lockupPeriod = `${staking.lockup_period / 86400} days`; // Convert to days and append "days"
-                        const lockupPeriod = "30 days";
-                        console.log("log >>>>>>>>>", lockupPeriod);
-                        
-                        return (
-                          <tr key={index}>
-                            <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm ">
-                              {index + 1}
-                            </td>
-                            <td className="px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm truncate max-w-[120px] overflow-hidden whitespace-nowrap">
-                              {formattedAmount}
-                            </td>
-                            <td className="px-4 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden sm:table-cell">
-                              {lockupPeriod}
-                            </td>
-                            <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden sm:table-cell">
-                              {dateStaked}
-                            </td>
-                            <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center align-middle">
-                              <div className="flex justify-center items-center">
-                                <button
-                                  onClick={() => handleClaim(staking, index)}
-                                  className={`px-4 py-1 rounded-full text-[8px] md:text-xs font-medium ${
-                                    parseFloat(staking.claimed_rewards) > 0
-                                      ? "bg-yellow-400 text-black"
-                                      : "bg-gray-400 text-gray-700 cursor-not-allowed "
-                                  }`}
-                                >
-                                  Claim
-                                </button>
-                              </div>
-                            </td>
-                            <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center align-middle">
-                              <div className="flex justify-center items-center">
-                                <button
-                                  onClick={() =>
-                                    handleUnstakeClick(staking, index)
-                                  }
-                                  className="px-4 py-1 bg-yellow-400 text-black rounded-full text-[8px] md:text-xs font-medium"
-                                >
-                                  Unstake
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    ) : stakingLoading ? (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-8 text-center">
-                          <div className="flex justify-center items-center space-x-2">
-                            <div className="w-5 h-5 border-4 border-t-yellow-400 border-solid rounded-full animate-spin"></div>
-                            <span className="text-yellow-400 text-xs md:text-sm">
-                              Loading...
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
+              <div>
+                <div className="hidden md:flex justify-between text-yellow-700 text-xs md:text-sm mb-4">
+                  <div className="flex flex-row mb-4">
+                    <span className="font-semibold">Total Staked Tokens: </span>
+                    <span className="text-yellow-400 ml-2">
+                      {userRewards?.total_staked_tokens
+                        ? formatYoctoAmount(
+                            userRewards.total_staked_tokens.toString()
+                          )
+                        : "0.00000000"}
+                    </span>
+                  </div>
+                  <div className="flex flex-row">
+                    <span className="font-semibold">
+                      Total Claimed Rewards:{" "}
+                    </span>
+                    <span className="text-yellow-400 ml-2">
+                      {userRewards?.total_claimed_rewards}
+                    </span>
+                  </div>
+                  <div className="flex flex-row">
+                    <span className="font-semibold">
+                      Total Unclaimed Rewards:
+                    </span>
+                    <span className="text-yellow-400 ml-2">
+                      {userRewards?.total_unclaimed_rewards}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-row md:hidden items-center text-yellow-700 text-xs mb-4 gap-4">
+                  <div className="flex flex-col items-center">
+                    <span className="font-semibold">Staked</span>
+                    <span className="text-yellow-400 ">
+                      {userRewards?.total_staked_tokens
+                        ? formatYoctoAmount(
+                            userRewards.total_staked_tokens.toString()
+                          )
+                        : "0.00000000"}
+                    </span>
+                  </div>
+                  <img src="/images/vertical.png" className="w-4 h-auto mx-2" />
+                  <div className="flex flex-col items-center">
+                    <span className="font-semibold">Claimed</span>
+                    <span className="text-yellow-400 ml-2">
+                      {userRewards?.total_claimed_rewards}
+                    </span>
+                  </div>
+                  <img src="/images/vertical.png" className="w-4 h-auto mx-2" />
+                  <div className="flex flex-col items-center">
+                    <span className="font-semibold">Unclaimed</span>
+                    <span className="text-yellow-400 ml-2">
+                      {userRewards?.total_unclaimed_rewards}
+                    </span>
+                  </div>
+                </div>
+
+                <table className="table-auto w-full text-left">
+                  <thead>
+                    <tr>
+                      <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center">
+                        S.NO
+                      </th>
+                      <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center md:w-[160px] w-[134px]">
+                        Staked Tokens
+                      </th>
+                      <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
+                        Lockup Period
+                      </th>
+                      <th className="md:px-4 px-2 py-2 text-[12px] md:text-sm border-b text-yellow-700 text-center hidden md:table-cell">
+                        Date of Staked
+                      </th>
+                      <th className="md:px-4 px-2 py-2 text-[12px] md:text-sm border-b text-yellow-700 text-center">
+                        Reward
+                      </th>
+                      <th className="md:px-4 px-2 py-2 text-[12px] md:text-sm border-b text-yellow-700 text-center">
+                        Unstake
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {signedAccountId ? (
+                      stakingInfo && stakingInfo.length > 0 ? (
+                        stakingInfo.map(
+                          (staking: StakingInfo, index: number) => {
+                            const formattedAmount = formatYoctoAmount(
+                              staking.staked_tokens.toString()
+                            );
+                            const dateStaked = new Date(
+                              staking.start_timestamp / 1000000
+                            ).toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            });
+                            const lockupPeriod = `${
+                              staking.lockup_period / 86400
+                            } days`;
+
+                            return (
+                              <tr key={index}>
+                                <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm ">
+                                  {index + 1}
+                                </td>
+                                <td className="px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm truncate max-w-[120px] overflow-hidden whitespace-nowrap">
+                                  {formattedAmount}
+                                </td>
+                                <td className="px-4 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden sm:table-cell">
+                                  {lockupPeriod}
+                                </td>
+                                <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden sm:table-cell">
+                                  {dateStaked}
+                                </td>
+                                <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center align-middle">
+                                  <div className="flex justify-center items-center">
+                                    <button
+                                      onClick={() =>
+                                        handleClaim(staking, index)
+                                      }
+                                      className={`px-4 py-1 rounded-full text-[8px] md:text-xs font-medium ${
+                                        parseFloat(staking.claimed_rewards) > 0
+                                          ? "bg-yellow-400 text-black"
+                                          : "bg-gray-400 text-gray-700 cursor-not-allowed "
+                                      }`}
+                                    >
+                                      Claim
+                                    </button>
+                                  </div>
+                                </td>
+                                <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center align-middle">
+                                  <div className="flex justify-center items-center">
+                                    <button
+                                      onClick={() =>
+                                        handleUnstakeClick(staking, index)
+                                      }
+                                      className="px-4 py-1 bg-yellow-400 text-black rounded-full text-[8px] md:text-xs font-medium"
+                                    >
+                                      Unstake
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          }
+                        )
+                      ) : stakingLoading ? (
+                        <tr>
+                          <td colSpan={6} className="px-4 py-8 text-center">
+                            <div className="flex justify-center items-center space-x-2">
+                              <div className="w-5 h-5 border-4 border-t-yellow-400 border-solid rounded-full animate-spin"></div>
+                              <span className="text-yellow-400 text-xs md:text-sm">
+                                Loading...
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        // Display error if no staking info is found
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="px-4 py-8 text-center text-yellow-400 text-xs md:text-sm"
+                          >
+                            {stakinginfoerror ||
+                              "You haven't staked any tokens yet. Start staking to claim your rewards here."}
+                          </td>
+                        </tr>
+                      )
                     ) : (
-                      // Display error if no staking info is found
                       <tr>
                         <td
                           colSpan={6}
                           className="px-4 py-8 text-center text-yellow-400 text-xs md:text-sm"
                         >
-                          {stakinginfoerror ||
-                            "You haven't staked any tokens yet. Start staking to claim your rewards here."}
+                          Please connect your wallet to see the details.
                         </td>
                       </tr>
-                    )
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="px-4 py-8 text-center text-yellow-400 text-xs md:text-sm"
-                      >
-                        Please connect your wallet to see the details.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             )}
 
             {activeTable === "nfts" && (
-              <table className="table-auto w-full text-left">
-                <thead>
-                  <tr>
-                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center">
-                      S.NO
-                    </th>
-                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center md:w-[160px] w-[126px]">
-                      Staked NFTs
-                    </th>
-                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
-                      Lockup Period
-                    </th>
-                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
-                      Date Staked
-                    </th>
-                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
-                      Queen
-                    </th>
-                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
-                      Drone
-                    </th>
-                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
-                      Worker
-                    </th>
-                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center">
-                      Reward
-                    </th>
-                    <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center">
-                      Unstake
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {signedAccountId ? (
-                    nftStakingInfo && nftStakingInfo.length > 0 ? (
-                      nftStakingInfo.map(
-                        (stakeInfo: StakeNftInfo, index: number) => {
-                          const lockupPeriodDays =
-                            stakeInfo.lockup_period / 86400;
-                          const dateStaked = new Date(
-                            stakeInfo.start_timestamp / 1000000
-                          ).toLocaleDateString("en-GB", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          });
-                          const claimedRewards = formatYoctoAmount(
-                            stakeInfo.claimed_rewards.toString()
-                          );
+              <div className="flex">
+                <table className="table-auto w-full text-left">
+                  <thead>
+                    <tr>
+                      <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center">
+                        S.NO
+                      </th>
+                      <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center md:w-[160px] w-[126px]">
+                        Staked NFTs
+                      </th>
+                      <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
+                        Lockup Period
+                      </th>
+                      <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
+                        Date Staked
+                      </th>
+                      <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
+                        Queen
+                      </th>
+                      <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
+                        Drone
+                      </th>
+                      <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center hidden md:table-cell">
+                        Worker
+                      </th>
+                      <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center">
+                        Reward
+                      </th>
+                      <th className="md:px-4 px-2 py-2 border-b text-[12px] md:text-sm text-yellow-700 text-center">
+                        Unstake
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {signedAccountId ? (
+                      nftStakingInfo && nftStakingInfo.length > 0 ? (
+                        nftStakingInfo.map(
+                          (stakeInfo: StakeNftInfo, index: number) => {
+                            const lockupPeriodDays =
+                              stakeInfo.lockup_period / 86400;
+                            const dateStaked = new Date(
+                              stakeInfo.start_timestamp / 1000000
+                            ).toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            });
+                            const claimedRewards = formatYoctoAmount(
+                              stakeInfo.claimed_rewards.toString()
+                            );
 
-                          return (
-                            <tr key={index}>
-                              <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm">
-                                {index + 1}
-                              </td>
-                              <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm">
-                                {stakeInfo.nft_ids.length} NFTs
-                              </td>
-                              <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
-                                {lockupPeriodDays} Days
-                              </td>
-                              <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
-                                {dateStaked}
-                              </td>
-                              <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
-                                {stakeInfo.queen}
-                              </td>
-                              <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
-                                {stakeInfo.drone}
-                              </td>
-                              <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
-                                {stakeInfo.worker}
-                              </td>
-                              <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center align-middle">
-                                <button
-                                  onClick={() =>
-                                    handleNftClaim(stakeInfo, index)
-                                  }
-                                  className={`px-4 py-1 rounded-full text-[8px] md:text-xs font-medium ${
-                                    parseFloat(stakeInfo.claimed_rewards) > 0
-                                      ? "bg-yellow-400 text-black"
-                                      : "bg-gray-400 text-gray-700 cursor-not-allowed "
-                                  }`}
-                                >
-                                  Claim
-                                </button>
-                              </td>
-                              <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center align-middle">
-                                <div className="flex justify-center items-center">
+                            return (
+                              <tr key={index}>
+                                <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm">
+                                  {index + 1}
+                                </td>
+                                <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm">
+                                  {stakeInfo.nft_ids.length} NFTs
+                                </td>
+                                <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
+                                  {lockupPeriodDays} Days
+                                </td>
+                                <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
+                                  {dateStaked}
+                                </td>
+                                <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
+                                  {stakeInfo.queen}
+                                </td>
+                                <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
+                                  {stakeInfo.drone}
+                                </td>
+                                <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center text-[10px] md:text-sm hidden md:table-cell">
+                                  {stakeInfo.worker}
+                                </td>
+                                <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center align-middle">
                                   <button
-                                    className="px-4 py-1 bg-yellow-400 text-black rounded-full text-[8px] md:text-xs font-medium"
-                                    onClick={() => {
-                                      handleUnstakeNftClick(stakeInfo, index);
-                                    }}
+                                    onClick={() =>
+                                      handleNftClaim(stakeInfo, index)
+                                    }
+                                    className={`px-4 py-1 rounded-full text-[8px] md:text-xs font-medium ${
+                                      parseFloat(stakeInfo.claimed_rewards) > 0
+                                        ? "bg-yellow-400 text-black"
+                                        : "bg-gray-400 text-gray-700 cursor-not-allowed "
+                                    }`}
                                   >
-                                    Unstake
+                                    Claim
                                   </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        }
+                                </td>
+                                <td className="md:px-4 px-2 py-2 border-b text-yellow-400 text-center align-middle">
+                                  <div className="flex justify-center items-center">
+                                    <button
+                                      className="px-4 py-1 bg-yellow-400 text-black rounded-full text-[8px] md:text-xs font-medium"
+                                      onClick={() => {
+                                        handleUnstakeNftClick(stakeInfo, index);
+                                      }}
+                                    >
+                                      Unstake
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          }
+                        )
+                      ) : nftLoading ? (
+                        <tr>
+                          <td colSpan={10} className="px-4 py-8 text-center">
+                            <div className="flex justify-center items-center space-x-2">
+                              <div className="w-5 h-5 border-4 border-t-yellow-400 border-solid rounded-full animate-spin"></div>
+                              <span className="text-yellow-400 text-xs md:text-sm">
+                                Loading...
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan={10}
+                            className="px-4 py-8 text-center text-yellow-400 text-xs md:text-sm"
+                          >
+                            {nftStakingerror
+                              ? nftStakingerror
+                              : "No NFTs staked yet. Stake your NFTs to earn rewards."}
+                          </td>
+                        </tr>
                       )
-                    ) : nftLoading ? (
-                      <tr>
-                        <td colSpan={10} className="px-4 py-8 text-center">
-                          <div className="flex justify-center items-center space-x-2">
-                            <div className="w-5 h-5 border-4 border-t-yellow-400 border-solid rounded-full animate-spin"></div>
-                            <span className="text-yellow-400 text-xs md:text-sm">
-                              Loading...
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
                     ) : (
                       <tr>
                         <td
                           colSpan={10}
                           className="px-4 py-8 text-center text-yellow-400 text-xs md:text-sm"
                         >
-                          {nftStakingerror
-                            ? nftStakingerror
-                            : "No NFTs staked yet. Stake your NFTs to earn rewards."}
+                          Please connect your wallet to see the details.
                         </td>
                       </tr>
-                    )
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={10}
-                        className="px-4 py-8 text-center text-yellow-400 text-xs md:text-sm"
-                      >
-                        Please connect your wallet to see the details.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
@@ -692,7 +765,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
           DONT HAVE THE NFT? GET ONE ON MITTE
         </p>
         <a
-          href="https://beta.mitte.gg/"
+          href="https://beta.mitte.gg/?contractAddress=sin-nft.bodega-lab.near"
           target="_blank"
           rel="noopener noreferrer"
         >

@@ -15,11 +15,8 @@ import Loader from "../Loader/Loader";
 import {
   NEXT_PUBLIC_NETWORK,
   SIN_STAKING_CONTRACT_BALANCE,
-  SIN_STAKING_CONTRACT_CLAIM_NFT_REWARDS,
-  SIN_STAKING_CONTRACT_CLAIM_REWARDS,
   SIN_STAKING_CONTRACT_NFT_STAKE,
   SIN_STAKING_CONTRACT_SHOW_NFTS,
-  SIN_STAKING_CONTRACT_STAKE_INFO,
   SIN_STAKING_CONTRACT_TOKEN_STAKE,
 } from "@/config/constants";
 import { useStakingInfo } from "@/hooks/viewStakingToken";
@@ -28,6 +25,7 @@ import { useLastRewardDistribution } from "@/hooks/getLastRewardDistribution";
 import { useNftApprove } from "@/hooks/approveNftStake";
 import { useNftTransferCall } from "@/hooks/transferNftstake";
 import { useTransactionDetails } from "@/hooks/getTransactionHash";
+import { useCalculateCurrentAPR } from "@/hooks/CalculateAPR";
 interface StakeSectionProps {
   setCurrentTab: (value: "STAKE_SIN" | "STAKE_NFT") => void; // Replace `any` with a more specific type if possible
   currentTab: "STAKE_SIN" | "STAKE_NFT"; // Replace `any` with a specific type if known
@@ -53,7 +51,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
   const [percentage, setPercentage] = useState(0);
   const { stakingInfo, fetchStakingInfo } = useStakingInfo(
     wallet,
-    SIN_STAKING_CONTRACT_STAKE_INFO
+    SIN_STAKING_CONTRACT_TOKEN_STAKE
   );
   const nft_contract_id = SIN_STAKING_CONTRACT_SHOW_NFTS;
   const ownerId = signedAccountId;
@@ -62,8 +60,8 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
     nft_contract_id: nft_contract_id,
     owner: ownerId,
   });
-  const tokenContractId = SIN_STAKING_CONTRACT_CLAIM_REWARDS;
-  const nftContractId = SIN_STAKING_CONTRACT_CLAIM_NFT_REWARDS;
+  const tokenContractId = SIN_STAKING_CONTRACT_TOKEN_STAKE;
+  const nftContractId = SIN_STAKING_CONTRACT_NFT_STAKE;
   const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
 
   const formatSinBalance = (balance: string): string => {
@@ -121,7 +119,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
     };
   }, [loading, hasMore]);
 
-  const { stake } = useStake(wallet, SIN_STAKING_CONTRACT_TOKEN_STAKE);
+  const { stake } = useStake(wallet, SIN_STAKING_CONTRACT_BALANCE);
 
   const handleStake = async () => {
     if (!signedAccountId) {
@@ -192,7 +190,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
   //     toast.error("Staking failed. Please try again.");
   //   }
   // };
-  const { approveNft } = useNftApprove(wallet, "artbattle.mintspace2.testnet");
+  const { approveNft } = useNftApprove(wallet, SIN_STAKING_CONTRACT_SHOW_NFTS);
   const { transferNft } = useNftTransferCall(
     wallet,
     SIN_STAKING_CONTRACT_SHOW_NFTS
@@ -366,7 +364,16 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
       setCurrentTab("STAKE_NFT");
     }
   }, [searchParams]);
-
+  const { currentAPR, fetchCurrentAPR } = useCalculateCurrentAPR(
+    wallet,
+    SIN_STAKING_CONTRACT_TOKEN_STAKE
+  );
+  const formattedAPR = currentAPR ? parseFloat(currentAPR).toFixed(2) : "0.00";
+  useEffect(() => {
+    if (wallet) {
+      fetchCurrentAPR();
+    }
+  }, [wallet]);
   const handleSignIn = async () => {
     return wallet?.signIn();
   };
@@ -482,23 +489,29 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
                 </span>
               </h4>
 
-              <div className="flex flex-row items-center justify-center">
-                <h2
-                  className="text-center text-yellow-400 font-semibold mb-4 text-xs md:text-sm"
+              <div className="flex flex-row items-center justify-between">
+                <h4
+                  className="text-center text-yellow-400 font-semibold mb-4 text-[10px] md:text-sm"
                   style={{ fontFamily: "montserrat-variablefont" }}
                 >
                   DEFAULT LOCK-UP PERIOD:
-                  <span className="font-bold text-lg text-[#a16207]" style={{ fontFamily: "montserrat-variablefont" }}> 1 MONTH</span>
-                </h2>
-                {/* <div
-                  className="text-center bg-black text-yellow-500 font-bold rounded-lg md:text-sm text-xs md:px-4 px-2 py-2 mb-6"
+                  <p
+                    className="font-bold text-lg text-[#a16207] md:text-sm text-xs"
+                    style={{ fontFamily: "montserrat-variablefont" }}
+                  >
+                    {" "}
+                    1 MONTH
+                  </p>
+                </h4>
+                <div
+                  className="text-center bg-black text-yellow-500 font-bold rounded-lg md:text-sm text-[10px] md:px-4 px-2 py-2 mb-6"
                   style={{
                     border: "1px solid #eeb636",
                     fontFamily: "montserrat-variablefont",
                   }}
                 >
-                  Est APR: 118%
-                </div> */}
+                  Est APR: {formattedAPR}%
+                </div>
               </div>
               {/* <div className="grid grid-cols-4 gap-2 mb-4 text-center">
                 {Object.keys(periods).map((period) => (
@@ -721,7 +734,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
           DONT HAVE $SIN? BUY SOME ON REF FINANCE
         </p>
         <a
-          href="https://app.ref.finance/pool/5583"
+          href="https://app.ref.finance/#near|sin-339.meme-cooking.near"
           target="_blank"
           rel="noopener noreferrer"
         >

@@ -127,7 +127,7 @@ const Body = () => {
         >
           <div className="flex flex-col items-center">
             <a
-              href="https://beta.mitte.gg/"
+              href="https://beta.mitte.gg/?contractAddress=sin-nft.bodega-lab.near"
               target="_blank"
               rel="noopener noreferrer"
               className="flex justify-center items-center"
@@ -140,7 +140,7 @@ const Body = () => {
           </div>
           <div className="flex flex-col items-center">
             <a
-              href="https://www.mintbase.xyz/"
+              href="https://www.mintbase.xyz/contract/survivalisnear.mintbase1.near/nfts/all/0"
               target="_blank"
               rel="noopener noreferrer"
               className="flex justify-center items-center"
@@ -191,7 +191,7 @@ const Body = () => {
           </div>
           <div className="flex flex-col items-center">
             <a
-              href="https://dexscreener.com/"
+              href="https://dexscreener.com/near/refv1-5583"
               target="_blank"
               rel="noopener noreferrer"
               className="flex justify-center items-center"
@@ -225,7 +225,7 @@ const Body = () => {
           </div>
           <div className="flex flex-col items-center">
             <a
-              href="https://app.ref.finance/pool/5583"
+              href="https://app.ref.finance/#near|sin-339.meme-cooking.near"
               target="_blank"
               rel="noopener noreferrer"
               className="flex justify-center items-center"
