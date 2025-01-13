@@ -3,7 +3,6 @@ import Body from "@/Components/Home/Body";
 import Header from "@/Components/Header/Header";
 import Footer from "@/Components/Footer/Footer";
 
-
 export default function Home() {
   return (
     <div
@@ -12,7 +11,7 @@ export default function Home() {
     >
       <Header />
       <Body />
-      <Footer/>
+      <Footer />
     </div>
   );
 }

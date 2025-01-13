@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { SIN_STAKING_CONTRACT_BALANCE } from "@/config/constants";
 import { useState, useEffect } from "react";
 
 interface UseSinBalanceProps {
@@ -19,7 +20,7 @@ export const useSinBalance = ({ wallet, signedAccountId }: UseSinBalanceProps) =
 
       try {
         const result = await wallet.viewMethod({
-          contractId: "sin-test-tkn.testnet", 
+          contractId: SIN_STAKING_CONTRACT_BALANCE, 
           method: "ft_balance_of",
           args: { account_id: signedAccountId },
         });

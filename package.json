@@ -9,13 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@mintbase-js/rpc": "^0.6.5",
     "@near-wallet-selector/bitte-wallet": "^8.9.14",
     "@near-wallet-selector/core": "^8.9.14",
     "@near-wallet-selector/modal-ui": "^8.9.14",
+    "@near-wallet-selector/my-near-wallet": "^8.9.14",
+    "graphql-request": "^7.1.2",
     "near-api-js": "^5.0.1",
     "next": "15.0.3",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
+    "react-hot-toast": "^2.4.1",
     "react-inlinesvg": "^4.1.5",
     "rxjs": "^7.8.1",
     "tailwindcss-animate": "^1.0.7"
