@@ -8,6 +8,8 @@ import { useSinBalance } from "@/hooks/fetchSinBalance";
 const Body = () => {
   const { wallet, signedAccountId } = useContext(NearContext);
   const { balance, error } = useSinBalance({ wallet, signedAccountId });
+  console.log("blance ...............",balance);
+  
   const handleSignIn = async () => {
     return wallet?.signIn();
   };
@@ -21,7 +23,7 @@ const Body = () => {
   const handleNavigationToNFTStaking = () => {
     router.push("/stake?tab=STAKE_NFT");
   };
-  const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
+  const yoctoToSin = 1e18; // Conversion factor from yocto to SIN
 
   const formatSinBalance = (balance: string): string => {
     const sinBalance = parseFloat(balance) / yoctoToSin;

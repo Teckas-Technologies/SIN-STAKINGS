@@ -12,17 +12,17 @@ export const useStake = (wallet: Wallet | undefined, contractId: string) => {
       }
 
       try {
-        // Convert the entered amount from NEAR to yoctoNEAR
-        const yoctoAmount = utils.format.parseNearAmount(amount);
+        // Convert the amount to yocto using 18 digits instead of 24
+        const yoctoAmount = (parseFloat(amount) * 10 ** 18).toFixed(0); // Convert to integer-like string
         console.log("yocto>>", yoctoAmount);
 
-        if (!yoctoAmount) {
+        if (isNaN(parseFloat(yoctoAmount))) {
           throw new Error("Invalid amount entered");
         }
 
         // const msg = JSON.stringify({ lockup_days: lockupPeriodInDays });
         const msg = "Staking Tokens";
-        // Call the smart contract method
+
         const callbackUrl = `${
           window.location.origin
         }/account?isStake=true&senderId=${encodeURIComponent(senderId)}`;
@@ -31,8 +31,8 @@ export const useStake = (wallet: Wallet | undefined, contractId: string) => {
           callbackUrl,
           method: "ft_transfer_call",
           args: {
-            receiver_id: SIN_STAKING_CONTRACT_TOKEN_STAKE, // Specify the receiver contract account
-            amount: yoctoAmount, // Amount to transfer
+            receiver_id: SIN_STAKING_CONTRACT_TOKEN_STAKE,
+            amount: yoctoAmount,
             msg,
           },
           gas: "300000000000000",

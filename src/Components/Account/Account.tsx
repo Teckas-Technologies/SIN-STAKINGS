@@ -89,7 +89,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
   const handleSignout = async () => {
     return wallet?.signOut();
   };
-  const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
+  const yoctoToSin = 1e18; // Conversion factor from yocto to SIN
 
   const formatSinBalance = (balance: string): string => {
     const sinBalance = parseFloat(balance) / yoctoToSin;
@@ -113,9 +113,11 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
   //   }
   // }, [searchParams]);
   const formatYoctoAmount = (balance: string): string => {
-    const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
+    const yoctoToSin = 1e18;
     const sinBalance = parseFloat(balance) / yoctoToSin;
-    return sinBalance.toFixed(8); // Display up to 8 decimal places
+    return sinBalance
+      .toFixed(1) // 1 decimal place
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
   const tokenContractId = SIN_STAKING_CONTRACT_TOKEN_STAKE;
@@ -369,61 +371,68 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
           <div className="w-full mt-4 bg-transparent flex items-center justify-center p-3">
             {activeTable === "tokens" && (
               <div>
-                <div className="hidden md:flex justify-between text-yellow-700 text-xs md:text-sm mb-4">
-                  <div className="flex flex-row mb-4">
-                    <span className="font-semibold">Total Staked Tokens: </span>
-                    <span className="text-yellow-400 ml-2">
-                      {userRewards?.total_staked_tokens
-                        ? formatYoctoAmount(
-                            userRewards.total_staked_tokens.toString()
-                          )
-                        : "0.00000000"}
-                    </span>
+                {userRewards?.total_staked_tokens && (
+                  <div className="hidden md:flex justify-between text-yellow-700 text-xs md:text-sm mb-4">
+                    <div className="flex flex-row mb-4">
+                      <span className="font-semibold">
+                        Total Staked Tokens:{" "}
+                      </span>
+                      <span className="text-yellow-400 ml-2">
+                        {formatYoctoAmount(
+                          userRewards.total_staked_tokens.toString()
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex flex-row">
+                      <span className="font-semibold">
+                        Total Claimed Rewards:{" "}
+                      </span>
+                      <span className="text-yellow-400 ml-2">
+                        {userRewards?.total_claimed_rewards}
+                      </span>
+                    </div>
+                    <div className="flex flex-row">
+                      <span className="font-semibold">
+                        Total Unclaimed Rewards:
+                      </span>
+                      <span className="text-yellow-400 ml-2">
+                        {userRewards?.total_unclaimed_rewards}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-row">
-                    <span className="font-semibold">
-                      Total Claimed Rewards:{" "}
-                    </span>
-                    <span className="text-yellow-400 ml-2">
-                      {userRewards?.total_claimed_rewards}
-                    </span>
+                )}
+                {userRewards?.total_staked_tokens && (
+                  <div className="flex flex-row md:hidden items-center text-yellow-700 text-xs mb-4 gap-4">
+                    <div className="flex flex-col items-center">
+                      <span className="font-semibold">Staked</span>
+                      <span className="text-yellow-400 ">
+                        {formatYoctoAmount(
+                          userRewards.total_staked_tokens.toString()
+                        )}
+                      </span>
+                    </div>
+                    <img
+                      src="/images/vertical.png"
+                      className="w-4 h-auto mx-2"
+                    />
+                    <div className="flex flex-col items-center">
+                      <span className="font-semibold">Claimed</span>
+                      <span className="text-yellow-400 ml-2">
+                        {userRewards?.total_claimed_rewards}
+                      </span>
+                    </div>
+                    <img
+                      src="/images/vertical.png"
+                      className="w-4 h-auto mx-2"
+                    />
+                    <div className="flex flex-col items-center">
+                      <span className="font-semibold">Unclaimed</span>
+                      <span className="text-yellow-400 ml-2">
+                        {userRewards?.total_unclaimed_rewards}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-row">
-                    <span className="font-semibold">
-                      Total Unclaimed Rewards:
-                    </span>
-                    <span className="text-yellow-400 ml-2">
-                      {userRewards?.total_unclaimed_rewards}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-row md:hidden items-center text-yellow-700 text-xs mb-4 gap-4">
-                  <div className="flex flex-col items-center">
-                    <span className="font-semibold">Staked</span>
-                    <span className="text-yellow-400 ">
-                      {userRewards?.total_staked_tokens
-                        ? formatYoctoAmount(
-                            userRewards.total_staked_tokens.toString()
-                          )
-                        : "0.00000000"}
-                    </span>
-                  </div>
-                  <img src="/images/vertical.png" className="w-4 h-auto mx-2" />
-                  <div className="flex flex-col items-center">
-                    <span className="font-semibold">Claimed</span>
-                    <span className="text-yellow-400 ml-2">
-                      {userRewards?.total_claimed_rewards}
-                    </span>
-                  </div>
-                  <img src="/images/vertical.png" className="w-4 h-auto mx-2" />
-                  <div className="flex flex-col items-center">
-                    <span className="font-semibold">Unclaimed</span>
-                    <span className="text-yellow-400 ml-2">
-                      {userRewards?.total_unclaimed_rewards}
-                    </span>
-                  </div>
-                </div>
+                )}
 
                 <table className="table-auto w-full text-left">
                   <thead>

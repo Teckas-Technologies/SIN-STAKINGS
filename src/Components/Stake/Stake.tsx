@@ -69,7 +69,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
   //   return sinBalance.toFixed(8); // Display up to 8 decimal places
   // };
 
-  const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
+  const yoctoToSin = 1e18;
 
   const formatSinBalance = (balance: string): string => {
     const sinBalance = parseFloat(balance) / yoctoToSin;
@@ -169,7 +169,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
       toast.success("Staking successful!");
     } catch (error: any) {
       console.error("Error staking:", error);
-      toast.error(`Staking failed: ${error.message || "Please try again."}`);
+      // toast.error(`Staking failed: ${error.message || "Please try again."}`);
     }
   };
 
@@ -211,7 +211,6 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
       const senderId = signedAccountId;
       const receiverId = SIN_STAKING_CONTRACT_NFT_STAKE;
 
-      // Iterate through selected NFTs
       const results = await Promise.all(
         selectedNFTs.map(async (tokenId) => {
           try {
@@ -220,7 +219,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
             return result;
           } catch (error) {
             console.error(`Error staking NFT ${tokenId}:`, error);
-            throw error; // Rethrow to handle in the outer catch
+            throw error;
           }
         })
       );
@@ -376,29 +375,30 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
     setSelectedPeriod(period);
   };
 
+  const rawBalance = balance ? parseFloat(balance) / yoctoToSin : 0;
   const parsedBalance = balance ? formatSinBalance(balance) : "0";
 
   const handleRangeClick = (clickedPercentage: number) => {
-    const parsedBalanceFloat = parseFloat(parsedBalance);
-    const newAmount = ((clickedPercentage / 100) * parsedBalanceFloat).toFixed(
-      8
-    );
-    setAmount(newAmount);
+    const newAmount = (clickedPercentage / 100) * rawBalance;
+    const formattedAmount = newAmount
+      .toFixed(1)
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    setAmount(formattedAmount);
     setPercentage(clickedPercentage);
   };
 
   const handleInputChange = (value: string) => {
     setAmount(value);
     const numericValue = parseFloat(value);
-    const parsedBalanceFloat = parseFloat(parsedBalance);
 
-    if (!isNaN(numericValue) && parsedBalanceFloat > 0) {
-      const calculatedPercentage = (numericValue / parsedBalanceFloat) * 100;
+    if (!isNaN(numericValue) && rawBalance > 0) {
+      const calculatedPercentage = (numericValue / rawBalance) * 100;
       setPercentage(Math.min(100, Math.max(0, calculatedPercentage)));
     } else {
       setPercentage(0);
     }
   };
+
   // const toggleSelectNFT = (token_id: string) => {
   //   console.log("Selected NFT token_id:", token_id);
 
