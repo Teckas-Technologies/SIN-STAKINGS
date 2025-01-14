@@ -388,7 +388,9 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                         Total Claimed Rewards:{" "}
                       </span>
                       <span className="text-yellow-400 ml-2">
-                        {userRewards?.total_claimed_rewards}
+                        {formatYoctoAmount(
+                          userRewards?.total_claimed_rewards.toString()
+                        )}
                       </span>
                     </div>
                     <div className="flex flex-row">
@@ -396,7 +398,9 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                         Total Unclaimed Rewards:
                       </span>
                       <span className="text-yellow-400 ml-2">
-                        {userRewards?.total_unclaimed_rewards}
+                        {formatYoctoAmount(
+                          userRewards?.total_unclaimed_rewards.toString()
+                        )}
                       </span>
                     </div>
                   </div>
@@ -418,7 +422,9 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                     <div className="flex flex-col items-center">
                       <span className="font-semibold">Claimed</span>
                       <span className="text-yellow-400 ml-2">
-                        {userRewards?.total_claimed_rewards}
+                      {formatYoctoAmount(
+                          userRewards?.total_claimed_rewards.toString()
+                        )}
                       </span>
                     </div>
                     <img
@@ -428,7 +434,9 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                     <div className="flex flex-col items-center">
                       <span className="font-semibold">Unclaimed</span>
                       <span className="text-yellow-400 ml-2">
-                        {userRewards?.total_unclaimed_rewards}
+                      {formatYoctoAmount(
+                          userRewards?.total_unclaimed_rewards.toString()
+                        )}
                       </span>
                     </div>
                   </div>
