@@ -8,7 +8,6 @@ export const useNftTransferCall = (
   const transferNft = useCallback(
     async (
       tokenId: string,
-      approvalId: number,
       receiverId: string,
       senderId: string
     ) => {
@@ -25,15 +24,15 @@ export const useNftTransferCall = (
         const result = await wallet.callMethod({
           contractId, 
           callbackUrl,
-          method: "nft_transfer_call", // NEAR method name
+          method: "nft_transfer_call", 
           args: {
             receiver_id: receiverId,
             token_id: tokenId,
-            approval_id: approvalId,
-            msg: "SIN NFT Staking", // Custom message for the transfer call
+            // approval_id: approvalId,
+            msg: "SIN NFT Staking", 
           },
-          gas: "300000000000000", // Adjust gas as needed
-          deposit: "1", // YoctoNEAR deposit for the transfer
+          gas: "300000000000000", 
+          deposit: "1",
         });
 
         console.log("NFT Transfer Call Result:", result);
