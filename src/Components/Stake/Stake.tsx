@@ -62,11 +62,20 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
   });
   const tokenContractId = SIN_STAKING_CONTRACT_TOKEN_STAKE;
   const nftContractId = SIN_STAKING_CONTRACT_NFT_STAKE;
+  // const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
+
+  // const formatSinBalance = (balance: string): string => {
+  //   const sinBalance = parseFloat(balance) / yoctoToSin;
+  //   return sinBalance.toFixed(8); // Display up to 8 decimal places
+  // };
+
   const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
 
   const formatSinBalance = (balance: string): string => {
     const sinBalance = parseFloat(balance) / yoctoToSin;
-    return sinBalance.toFixed(8); // Display up to 8 decimal places
+    return sinBalance
+      .toFixed(1) // 1 decimal place
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Add commas for thousands
   };
   const {
     rewardDistribution: tokenRewardDistribution,
@@ -170,6 +179,59 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
     "6-Month": 75,
     "9-Month": 100,
   };
+  const toggleSelectNFT = (token_id: string) => {
+    console.log("Selected NFT token_id:", token_id);
+
+    setSelectedNFTs((prevSelectedNFTs) => {
+      if (prevSelectedNFTs.includes(token_id)) {
+        // Deselect if already selected
+        return [];
+      } else {
+        // Select the new NFT, deselect others
+        return [token_id];
+      }
+    });
+  };
+  const { transferNft } = useNftTransferCall(
+    wallet,
+    SIN_STAKING_CONTRACT_SHOW_NFTS
+  );
+  const handleNftStake = async () => {
+    if (!signedAccountId) {
+      toast.error("Please connect your wallet before staking your NFTs!");
+      return;
+    }
+
+    if (selectedNFTs.length === 0) {
+      toast.error("Please select an NFT to stake.");
+      return;
+    }
+
+    try {
+      const senderId = signedAccountId;
+      const receiverId = SIN_STAKING_CONTRACT_NFT_STAKE;
+
+      // Iterate through selected NFTs
+      const results = await Promise.all(
+        selectedNFTs.map(async (tokenId) => {
+          try {
+            const result = await transferNft(tokenId, receiverId, senderId);
+            console.log(`NFT ${tokenId} staked successfully:`, result);
+            return result;
+          } catch (error) {
+            console.error(`Error staking NFT ${tokenId}:`, error);
+            throw error; // Rethrow to handle in the outer catch
+          }
+        })
+      );
+
+      console.log("All staked NFTs results:", results);
+      toast.success("All selected NFTs staked successfully!");
+    } catch (error) {
+      console.error("Error staking NFTs:", error);
+      toast.error("Staking failed. Please try again.");
+    }
+  };
 
   // const handleNftStake = async () => {
   //   if (!signedAccountId) {
@@ -190,145 +252,141 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
   //     toast.error("Staking failed. Please try again.");
   //   }
   // };
-  const { approveNft } = useNftApprove(wallet, SIN_STAKING_CONTRACT_SHOW_NFTS);
-  const { transferNft } = useNftTransferCall(
-    wallet,
-    SIN_STAKING_CONTRACT_SHOW_NFTS
-  );
+  // const { approveNft } = useNftApprove(wallet, SIN_STAKING_CONTRACT_SHOW_NFTS);
+  // const { transferNft } = useNftTransferCall(
+  //   wallet,
+  //   SIN_STAKING_CONTRACT_SHOW_NFTS
+  // );
 
-  const handleNftStake = async () => {
-    try {
-      if (!signedAccountId) {
-        toast.error("Please connect your wallet to continue.");
-        return;
-      }
+  // const handleNftStake = async () => {
+  //   try {
+  //     if (!signedAccountId) {
+  //       toast.error("Please connect your wallet to continue.");
+  //       return;
+  //     }
 
-      if (!selectedNFTs || selectedNFTs.length === 0) {
-        toast.error("Please select at least one NFT to stake.");
-        return;
-      }
-      for (const tokenId of selectedNFTs) {
-        const receiverContractId = SIN_STAKING_CONTRACT_NFT_STAKE;
+  //     if (!selectedNFTs || selectedNFTs.length === 0) {
+  //       toast.error("Please select at least one NFT to stake.");
+  //       return;
+  //     }
+  //     for (const tokenId of selectedNFTs) {
+  //       const receiverContractId = SIN_STAKING_CONTRACT_NFT_STAKE;
 
-        const approveResult = await approveNft(
-          tokenId,
-          receiverContractId,
-          signedAccountId
-        );
-        console.log(`NFT approved successfully:`, approveResult);
-      }
+  //       const approveResult = await approveNft(
+  //         tokenId,
+  //         receiverContractId,
+  //         signedAccountId
+  //       );
+  //       console.log(`NFT approved successfully:`, approveResult);
+  //     }
 
-      alert("All selected NFTs staked successfully!");
-    } catch (error) {
-      console.error("Error staking NFTs:", error);
-      alert("Failed to stake one or more NFTs. Please try again.");
-    }
-  };
+  //     alert("All selected NFTs staked successfully!");
+  //   } catch (error) {
+  //     console.error("Error staking NFTs:", error);
+  //     alert("Failed to stake one or more NFTs. Please try again.");
+  //   }
+  // };
 
-  const { getTransactionDetails, approveId, tokenIds } =
-    useTransactionDetails(wallet);
+  // const { getTransactionDetails, approveId, tokenIds } =
+  //   useTransactionDetails(wallet);
 
-  useEffect(() => {
-    console.log("Extracting query parameters from URL...");
-    const params = new URLSearchParams(window.location.search);
-    const isApproveParam = params.get("isApprove") === "true";
-    const transactionHashes = params.get("transactionHashes");
+  // useEffect(() => {
+  //   console.log("Extracting query parameters from URL...");
+  //   const params = new URLSearchParams(window.location.search);
+  //   const isApproveParam = params.get("isApprove") === "true";
+  //   const transactionHashes = params.get("transactionHashes");
 
-    console.log("isApprove:", isApproveParam);
-    console.log("transactionHashes:", transactionHashes);
+  //   console.log("isApprove:", isApproveParam);
+  //   console.log("transactionHashes:", transactionHashes);
 
-    setIsApprove(isApproveParam);
-    setTransactionHash(transactionHashes);
-  }, []);
+  //   setIsApprove(isApproveParam);
+  //   setTransactionHash(transactionHashes);
+  // }, []);
 
-  // Fetch transaction details and approvalId if `isApprove` is true
-  useEffect(() => {
-    const fetchAndHandleTransaction = async () => {
-      console.log("Starting fetchAndHandleTransaction...");
-      console.log("isApprove:", isApprove);
-      console.log("transactionHash:", transactionHash);
+  // useEffect(() => {
+  //   const fetchAndHandleTransaction = async () => {
+  //     console.log("Starting fetchAndHandleTransaction...");
+  //     console.log("isApprove:", isApprove);
+  //     console.log("transactionHash:", transactionHash);
 
-      if (isApprove && transactionHash) {
-        try {
-          console.log("Fetching transaction details...");
-          const {
-            transaction,
-            approvalId,
-            tokenIds: fetchedTokenIds,
-          } = await getTransactionDetails(transactionHash);
+  //     if (isApprove && transactionHash) {
+  //       try {
+  //         console.log("Fetching transaction details...");
+  //         const {
+  //           transaction,
+  //           approvalId,
+  //           tokenIds: fetchedTokenIds,
+  //         } = await getTransactionDetails(transactionHash);
 
-          console.log("Transaction Details:", transaction);
-          console.log("Fetched Approval ID:", approvalId);
-          console.log("Fetched Token IDs:", fetchedTokenIds);
+  //         console.log("Transaction Details:", transaction);
+  //         console.log("Fetched Approval ID:", approvalId);
+  //         console.log("Fetched Token IDs:", fetchedTokenIds);
 
-          if (approvalId && fetchedTokenIds.length > 0) {
-            console.log(
-              "Approval ID and Token IDs found, proceeding to handleClick..."
-            );
-            await handleClick(approvalId, fetchedTokenIds);
-          } else {
-            console.error(
-              "Approval ID or Token IDs not found in the transaction logs."
-            );
-          }
-        } catch (error) {
-          console.error("Error fetching transaction details:", error);
-        }
-      } else {
-        console.log(
-          "isApprove is false or transactionHash is null. Skipping fetch."
-        );
-      }
-    };
+  //         if (approvalId && fetchedTokenIds.length > 0) {
+  //           console.log(
+  //             "Approval ID and Token IDs found, proceeding to handleClick..."
+  //           );
+  //           await handleClick(approvalId, fetchedTokenIds);
+  //         } else {
+  //           console.error(
+  //             "Approval ID or Token IDs not found in the transaction logs."
+  //           );
+  //         }
+  //       } catch (error) {
+  //         console.error("Error fetching transaction details:", error);
+  //       }
+  //     } else {
+  //       console.log(
+  //         "isApprove is false or transactionHash is null. Skipping fetch."
+  //       );
+  //     }
+  //   };
 
-    fetchAndHandleTransaction();
-  }, [isApprove, transactionHash, getTransactionDetails]);
+  //   fetchAndHandleTransaction();
+  // }, [isApprove, transactionHash, getTransactionDetails]);
 
-  // Function to handle NFT transfer
-  const handleClick = async (approvalId: number, selectedNFTs: string[]) => {
-    console.log("Starting handleClick with approvalId:", approvalId);
-    console.log("Selected NFTs for transfer:", selectedNFTs);
+  // const handleClick = async (approvalId: number, selectedNFTs: string[]) => {
+  //   console.log("Starting handleClick with approvalId:", approvalId);
+  //   console.log("Selected NFTs for transfer:", selectedNFTs);
 
-    const receiverContractId = SIN_STAKING_CONTRACT_NFT_STAKE;
+  //   const receiverContractId = SIN_STAKING_CONTRACT_NFT_STAKE;
 
-    for (const tokenId of selectedNFTs) {
-      console.log(`Initiating transfer for tokenId: ${tokenId}`);
-      try {
-        const transferResult = await transferNft(
-          tokenId,
-          approvalId,
-          receiverContractId,
-          signedAccountId
-        );
-        console.log(
-          `NFT transfer successful for tokenId: ${tokenId}`,
-          transferResult
-        );
-      } catch (error) {
-        console.error(`Error transferring NFT with tokenId: ${tokenId}`, error);
-      }
-    }
-  };
+  //   for (const tokenId of selectedNFTs) {
+  //     console.log(`Initiating transfer for tokenId: ${tokenId}`);
+  //     try {
+  //       const transferResult = await transferNft(
+  //         tokenId,
+  //         approvalId,
+  //         receiverContractId,
+  //         signedAccountId
+  //       );
+  //       console.log(
+  //         `NFT transfer successful for tokenId: ${tokenId}`,
+  //         transferResult
+  //       );
+  //     } catch (error) {
+  //       console.error(`Error transferring NFT with tokenId: ${tokenId}`, error);
+  //     }
+  //   }
+  // };
 
   const handlePeriodSelection = (
     period: "1-Month" | "3-Month" | "6-Month" | "9-Month"
   ) => {
     setSelectedPeriod(period);
   };
-  // Format the raw yocto balance to readable SIN balance
+
   const parsedBalance = balance ? formatSinBalance(balance) : "0";
 
-  // Update the range click handler to use human-readable balance
   const handleRangeClick = (clickedPercentage: number) => {
     const parsedBalanceFloat = parseFloat(parsedBalance);
     const newAmount = ((clickedPercentage / 100) * parsedBalanceFloat).toFixed(
       8
-    ); // Use parsedBalance in SIN format
+    );
     setAmount(newAmount);
     setPercentage(clickedPercentage);
   };
 
-  // Handle input change and update the range based on the value
   const handleInputChange = (value: string) => {
     setAmount(value);
     const numericValue = parseFloat(value);
@@ -336,9 +394,9 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
 
     if (!isNaN(numericValue) && parsedBalanceFloat > 0) {
       const calculatedPercentage = (numericValue / parsedBalanceFloat) * 100;
-      setPercentage(Math.min(100, Math.max(0, calculatedPercentage))); // Keep percentage within 0-100 range
+      setPercentage(Math.min(100, Math.max(0, calculatedPercentage)));
     } else {
-      setPercentage(0); // Reset to 0 if input is invalid
+      setPercentage(0);
     }
   };
   // const toggleSelectNFT = (token_id: string) => {
@@ -352,19 +410,6 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
   //     }
   //   });
   // };
-  const toggleSelectNFT = (token_id: string) => {
-    console.log("Selected NFT token_id:", token_id);
-
-    setSelectedNFTs((prevSelectedNFTs) => {
-      if (prevSelectedNFTs.includes(token_id)) {
-        // Deselect if already selected
-        return [];
-      } else {
-        // Select the new NFT, deselect others
-        return [token_id];
-      }
-    });
-  };
 
   const searchParams = useSearchParams();
   useEffect(() => {

@@ -65,7 +65,7 @@ const useFetchNFTMedia = ({
       if (data?.mb_views_nft_tokens) {
         const nftData = data.mb_views_nft_tokens.map((nft: any) => ({
           token_id: nft.token_id,
-          media: nft.media,
+          media: nft.base_uri && nft.media ? `${nft.base_uri}/${nft.media}` : null,
           title: nft.title,
           owner: nft.owner,
         }));
