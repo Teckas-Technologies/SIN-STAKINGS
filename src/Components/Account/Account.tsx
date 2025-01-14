@@ -89,10 +89,13 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
   const handleSignout = async () => {
     return wallet?.signOut();
   };
+  const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
+
   const formatSinBalance = (balance: string): string => {
-    const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
     const sinBalance = parseFloat(balance) / yoctoToSin;
-    return sinBalance.toFixed(8); // Display up to 8 decimal places
+    return sinBalance
+      .toFixed(1) // 1 decimal place
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Add commas for thousands
   };
   // const totalTokensStaked = stakingInfo?.amount ? (
   //   formatYoctoAmount(stakingInfo.amount)
