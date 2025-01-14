@@ -21,10 +21,13 @@ const Body = () => {
   const handleNavigationToNFTStaking = () => {
     router.push("/stake?tab=STAKE_NFT");
   };
+  const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
+
   const formatSinBalance = (balance: string): string => {
-    const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
     const sinBalance = parseFloat(balance) / yoctoToSin;
-    return sinBalance.toFixed(8); // Display up to 8 decimal places
+    return sinBalance
+      .toFixed(1) // 1 decimal place
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Add commas for thousands
   };
   return (
     <div
