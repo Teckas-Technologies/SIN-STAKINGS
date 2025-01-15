@@ -25,6 +25,8 @@ export const useSinBalance = ({ wallet, signedAccountId }: UseSinBalanceProps) =
           args: { account_id: signedAccountId },
         });
         setBalance(result);
+        console.log("SIN BALANCE :",result);
+        
         setError(null);
       } catch (err) {
         console.error("Error fetching balance:", err);
