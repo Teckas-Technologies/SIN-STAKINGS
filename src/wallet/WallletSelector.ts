@@ -2,7 +2,8 @@
 import type { FinalExecutionOutcome, WalletSelector, WalletSelectorState } from '@near-wallet-selector/core';
 import '@near-wallet-selector/modal-ui/styles.css';
 import { setupWalletSelector } from '@near-wallet-selector/core';
-// import { setupMeteorWallet } from '@near-wallet-selector/meteor-wallet';
+import { setupMeteorWallet } from '@near-wallet-selector/meteor-wallet';
+import { setupHereWallet } from '@near-wallet-selector/here-wallet';
 // import { setupMintbaseWallet } from '@near-wallet-selector/mintbase-wallet';
 import { setupModal } from '@near-wallet-selector/modal-ui';
 import { setupMyNearWallet } from '@near-wallet-selector/my-near-wallet';
@@ -39,9 +40,9 @@ export class Wallet {
             network: this.networkId,
             modules: [
                 setupBitteWallet() as any,
-                // setupMeteorWallet(),
+                setupMeteorWallet(),
                 setupMyNearWallet(),
-                // setupHereWallet(),
+                setupHereWallet(),
                 // setupMintbaseWallet(),
             ],
         });
