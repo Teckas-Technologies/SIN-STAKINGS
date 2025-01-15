@@ -12,6 +12,8 @@
     "@mintbase-js/rpc": "^0.6.5",
     "@near-wallet-selector/bitte-wallet": "^8.9.14",
     "@near-wallet-selector/core": "^8.9.14",
+    "@near-wallet-selector/here-wallet": "^8.9.15",
+    "@near-wallet-selector/meteor-wallet": "^8.9.15",
     "@near-wallet-selector/modal-ui": "^8.9.14",
     "@near-wallet-selector/my-near-wallet": "^8.9.14",
     "graphql-request": "^7.1.2",
