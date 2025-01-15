@@ -93,9 +93,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
 
   const formatSinBalance = (balance: string): string => {
     const sinBalance = parseFloat(balance) / yoctoToSin;
-    return sinBalance
-      .toFixed(1) // 1 decimal place
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Add commas for thousands
+    return sinBalance.toFixed(2);
   };
   // const totalTokensStaked = stakingInfo?.amount ? (
   //   formatYoctoAmount(stakingInfo.amount)
@@ -115,9 +113,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
   const formatYoctoAmount = (balance: string): string => {
     const yoctoToSin = 1e18;
     const sinBalance = parseFloat(balance) / yoctoToSin;
-    return sinBalance
-      .toFixed(1) // 1 decimal place
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return sinBalance.toFixed(2);
   };
 
   const tokenContractId = SIN_STAKING_CONTRACT_TOKEN_STAKE;
@@ -422,7 +418,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                     <div className="flex flex-col items-center">
                       <span className="font-semibold">Claimed</span>
                       <span className="text-yellow-400 ml-2">
-                      {formatYoctoAmount(
+                        {formatYoctoAmount(
                           userRewards?.total_claimed_rewards.toString()
                         )}
                       </span>
@@ -434,7 +430,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                     <div className="flex flex-col items-center">
                       <span className="font-semibold">Unclaimed</span>
                       <span className="text-yellow-400 ml-2">
-                      {formatYoctoAmount(
+                        {formatYoctoAmount(
                           userRewards?.total_unclaimed_rewards.toString()
                         )}
                       </span>

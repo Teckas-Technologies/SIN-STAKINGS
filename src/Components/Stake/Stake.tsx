@@ -73,9 +73,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
 
   const formatSinBalance = (balance: string): string => {
     const sinBalance = parseFloat(balance) / yoctoToSin;
-    return sinBalance
-      .toFixed(1) // 1 decimal place
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Add commas for thousands
+    return sinBalance.toFixed(2); 
   };
   const {
     rewardDistribution: tokenRewardDistribution,
@@ -381,8 +379,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
   const handleRangeClick = (clickedPercentage: number) => {
     const newAmount = (clickedPercentage / 100) * rawBalance;
     const formattedAmount = newAmount
-      .toFixed(1)
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      .toFixed(2)
     setAmount(formattedAmount);
     setPercentage(clickedPercentage);
   };
