@@ -12,8 +12,11 @@ export const useStake = (wallet: Wallet | undefined, contractId: string) => {
       }
 
       try {
-        // Convert the amount to yocto using 18 digits instead of 24
-        const yoctoAmount = (parseFloat(amount) * 10 ** 18).toFixed(0); // Convert to integer-like string
+        const yoctoAmount = (parseFloat(amount) * 10 ** 18).toLocaleString(
+          "fullwide",
+          { useGrouping: false }
+        );
+
         console.log("yocto>>", yoctoAmount);
 
         if (isNaN(parseFloat(yoctoAmount))) {

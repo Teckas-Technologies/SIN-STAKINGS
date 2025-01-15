@@ -8,8 +8,8 @@ import { useSinBalance } from "@/hooks/fetchSinBalance";
 const Body = () => {
   const { wallet, signedAccountId } = useContext(NearContext);
   const { balance, error } = useSinBalance({ wallet, signedAccountId });
-  console.log("blance ...............",balance);
-  
+  console.log("blance ...............", balance);
+
   const handleSignIn = async () => {
     return wallet?.signIn();
   };
@@ -23,13 +23,13 @@ const Body = () => {
   const handleNavigationToNFTStaking = () => {
     router.push("/stake?tab=STAKE_NFT");
   };
-  const yoctoToSin = 1e18; // Conversion factor from yocto to SIN
+  const yoctoToSin = 1e18;
 
   const formatSinBalance = (balance: string): string => {
     const sinBalance = parseFloat(balance) / yoctoToSin;
-    return sinBalance
-      .toFixed(1) // 1 decimal place
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Add commas for thousands
+    console.log("log converted balance", sinBalance);
+
+    return sinBalance.toFixed(2); 
   };
   return (
     <div
@@ -108,20 +108,20 @@ const Body = () => {
           >
             NFT Staking
           </button>
-         <div>
-         <a
-            href="https://meme.cooking/meme/339"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <button
-              className="w-full px-6 py-3 font-semibold bg-[#f8b12c] text-black rounded-full hover:bg-[#ffd65a] uppercase"
-              style={{ fontFamily: "montserrat-variablefont" }}
+          <div>
+            <a
+              href="https://meme.cooking/meme/339"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Buy $SIN
-            </button>
-          </a>
-         </div>
+              <button
+                className="w-full px-6 py-3 font-semibold bg-[#f8b12c] text-black rounded-full hover:bg-[#ffd65a] uppercase"
+                style={{ fontFamily: "montserrat-variablefont" }}
+              >
+                Buy $SIN
+              </button>
+            </a>
+          </div>
         </div>
 
         <hr className="my-6 border-t border-[#f8b12c]" />

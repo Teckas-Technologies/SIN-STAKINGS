@@ -93,9 +93,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
 
   const formatSinBalance = (balance: string): string => {
     const sinBalance = parseFloat(balance) / yoctoToSin;
-    return sinBalance
-      .toFixed(1) // 1 decimal place
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Add commas for thousands
+    return sinBalance.toFixed(2);
   };
   // const totalTokensStaked = stakingInfo?.amount ? (
   //   formatYoctoAmount(stakingInfo.amount)
@@ -115,9 +113,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
   const formatYoctoAmount = (balance: string): string => {
     const yoctoToSin = 1e18;
     const sinBalance = parseFloat(balance) / yoctoToSin;
-    return sinBalance
-      .toFixed(1) // 1 decimal place
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return sinBalance.toFixed(2);
   };
 
   const tokenContractId = SIN_STAKING_CONTRACT_TOKEN_STAKE;
@@ -208,17 +204,17 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
       staking.start_timestamp / 1000000 + staking.lockup_period * 1000; // Convert lockup period to milliseconds
 
     // Check if the lockup period is completed
-    if (currentTime < lockupEndTime) {
-      const unlockDate = new Date(lockupEndTime).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-      toast.error(
-        `Lockup period not completed. You can unstake your tokens after ${unlockDate}.`
-      );
-      return;
-    }
+    // if (currentTime < lockupEndTime) {
+    //   const unlockDate = new Date(lockupEndTime).toLocaleDateString("en-GB", {
+    //     day: "2-digit",
+    //     month: "short",
+    //     year: "numeric",
+    //   });
+    //   toast.error(
+    //     `Lockup period not completed. You can unstake your tokens after ${unlockDate}.`
+    //   );
+    //   return;
+    // }
 
     // If lockup period is completed and tokenReward is 0
     if (tokenReward === 0) {
@@ -247,17 +243,17 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
     console.log("end ", lockupEndTime);
 
     // Check if the lockup period is completed
-    if (currentTime < lockupEndTime) {
-      const unlockDate = new Date(lockupEndTime).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-      toast.error(
-        `Lockup period not completed. You can unstake your tokens after ${unlockDate}.`
-      );
-      return;
-    }
+    // if (currentTime < lockupEndTime) {
+    //   const unlockDate = new Date(lockupEndTime).toLocaleDateString("en-GB", {
+    //     day: "2-digit",
+    //     month: "short",
+    //     year: "numeric",
+    //   });
+    //   toast.error(
+    //     `Lockup period not completed. You can unstake your tokens after ${unlockDate}.`
+    //   );
+    //   return;
+    // }
 
     // If lockup period is completed and tokenReward is 0
     if (nftReward === 0) {
@@ -422,7 +418,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                     <div className="flex flex-col items-center">
                       <span className="font-semibold">Claimed</span>
                       <span className="text-yellow-400 ml-2">
-                      {formatYoctoAmount(
+                        {formatYoctoAmount(
                           userRewards?.total_claimed_rewards.toString()
                         )}
                       </span>
@@ -434,7 +430,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                     <div className="flex flex-col items-center">
                       <span className="font-semibold">Unclaimed</span>
                       <span className="text-yellow-400 ml-2">
-                      {formatYoctoAmount(
+                        {formatYoctoAmount(
                           userRewards?.total_unclaimed_rewards.toString()
                         )}
                       </span>
