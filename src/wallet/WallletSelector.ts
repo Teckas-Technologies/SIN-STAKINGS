@@ -7,7 +7,7 @@ import { setupHereWallet } from '@near-wallet-selector/here-wallet';
 // import { setupMintbaseWallet } from '@near-wallet-selector/mintbase-wallet';
 import { setupModal } from '@near-wallet-selector/modal-ui';
 import { setupMyNearWallet } from '@near-wallet-selector/my-near-wallet';
-// import { setupBitteWallet } from '@near-wallet-selector/bitte-wallet';
+import { setupBitteWallet } from '@near-wallet-selector/bitte-wallet';
 import { providers, utils } from 'near-api-js';
 import type { Context } from 'react';
 import { createContext } from 'react';
@@ -39,8 +39,8 @@ export class Wallet {
         this.selector = setupWalletSelector({
             network: this.networkId,
             modules: [
-                // setupBitteWallet() as any,
-                setupMeteorWallet() as any,
+                setupBitteWallet() as any,
+                setupMeteorWallet(),
                 setupMyNearWallet(),
                 setupHereWallet(),
                 // setupMintbaseWallet(),
