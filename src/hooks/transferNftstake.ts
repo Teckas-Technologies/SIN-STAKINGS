@@ -21,6 +21,14 @@ export const useNftTransferCall = (
         const callbackUrl = `${
             window.location.origin
           }/account?isNftStake=true&senderId=${encodeURIComponent(senderId)}`;
+          const msg = JSON.stringify({
+            reference_blob: {
+              attributes: [
+                { trait_type: "Body", value: "Queen" },
+                { trait_type: "Wings", value: "Diamond" },
+              ],
+            },
+          });
         const result = await wallet.callMethod({
           contractId, 
           callbackUrl,
@@ -29,7 +37,7 @@ export const useNftTransferCall = (
             receiver_id: receiverId,
             token_id: tokenId,
             // approval_id: approvalId,
-            msg: "SIN NFT Staking", 
+            msg, 
           },
           gas: "300000000000000", 
           deposit: "1",
