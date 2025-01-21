@@ -243,17 +243,17 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
     console.log("end ", lockupEndTime);
 
     // Check if the lockup period is completed
-    if (currentTime < lockupEndTime) {
-      const unlockDate = new Date(lockupEndTime).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-      toast.error(
-        `Lockup period not completed. You can unstake your tokens after ${unlockDate}.`
-      );
-      return;
-    }
+    // if (currentTime < lockupEndTime) {
+    //   const unlockDate = new Date(lockupEndTime).toLocaleDateString("en-GB", {
+    //     day: "2-digit",
+    //     month: "short",
+    //     year: "numeric",
+    //   });
+    //   toast.error(
+    //     `Lockup period not completed. You can unstake your tokens after ${unlockDate}.`
+    //   );
+    //   return;
+    // }
 
     // If lockup period is completed and tokenReward is 0
     if (nftReward === 0) {

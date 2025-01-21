@@ -9,7 +9,8 @@ export const useNftTransferCall = (
     async (
       tokenId: string,
       receiverId: string,
-      senderId: string
+      senderId: string,
+      msg: string
     ) => {
       if (!wallet) {
         throw new Error("Wallet is not connected");
@@ -19,27 +20,20 @@ export const useNftTransferCall = (
         console.log("Initiating NFT transfer call...");
         console.log("Nft Stake called.......");
         const callbackUrl = `${
-            window.location.origin
-          }/account?isNftStake=true&senderId=${encodeURIComponent(senderId)}`;
-          const msg = JSON.stringify({
-            reference_blob: {
-              attributes: [
-                { trait_type: "Body", value: "Queen" },
-                { trait_type: "Wings", value: "Diamond" },
-              ],
-            },
-          });
+          window.location.origin
+        }/account?isNftStake=true&senderId=${encodeURIComponent(senderId)}`;
+
         const result = await wallet.callMethod({
-          contractId, 
+          contractId,
           callbackUrl,
-          method: "nft_transfer_call", 
+          method: "nft_transfer_call",
           args: {
             receiver_id: receiverId,
             token_id: tokenId,
             // approval_id: approvalId,
-            msg, 
+            msg: msg,
           },
-          gas: "300000000000000", 
+          gas: "300000000000000",
           deposit: "1",
         });
 
