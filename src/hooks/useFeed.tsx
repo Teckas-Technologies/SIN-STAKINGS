@@ -3,11 +3,17 @@ import { graphQLService } from "@/data/queries/graphqlService";
 import { FETCH_FEED } from "@/data/queries/showNft";
 import { useState, useCallback } from "react";
 
+interface NFTAttribute {
+  value: string;
+  trait_type: string;
+}
+
 interface NFT {
   token_id: string;
-  media: string;
+  media: string | null;
   title: string;
   owner: string;
+  attributes: NFTAttribute[];
 }
 
 const useFetchNFTMedia = ({
@@ -68,6 +74,7 @@ const useFetchNFTMedia = ({
           media: nft.base_uri && nft.media ? `${nft.base_uri}/${nft.media}` : null,
           title: nft.title,
           owner: nft.owner,
+          attributes: nft.reference_blob?.attributes || [],
         }));
 
         console.log("Parsed NFT data:", nftData);

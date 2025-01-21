@@ -30,6 +30,11 @@ interface StakeSectionProps {
   setCurrentTab: (value: "STAKE_SIN" | "STAKE_NFT") => void; // Replace `any` with a more specific type if possible
   currentTab: "STAKE_SIN" | "STAKE_NFT"; // Replace `any` with a specific type if known
 }
+interface NFT {
+  token_id: string;
+  attributes?: Array<{ trait_type: string; value: string }>;
+  [key: string]: any; // To allow other dynamic properties if needed
+}
 
 export const StakeSection: React.FC<StakeSectionProps> = ({
   setCurrentTab,
@@ -60,6 +65,10 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
     nft_contract_id: nft_contract_id,
     owner: ownerId,
   });
+  const allAttributes = nfts.map((nft) => nft.attributes);
+
+  console.log("All Attributes:", allAttributes);
+
   const tokenContractId = SIN_STAKING_CONTRACT_TOKEN_STAKE;
   const nftContractId = SIN_STAKING_CONTRACT_NFT_STAKE;
   // const yoctoToSin = 1e24; // Conversion factor from yocto to SIN
@@ -73,7 +82,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
 
   const formatSinBalance = (balance: string): string => {
     const sinBalance = parseFloat(balance) / yoctoToSin;
-    return sinBalance.toFixed(2); 
+    return sinBalance.toFixed(2);
   };
   const {
     rewardDistribution: tokenRewardDistribution,
@@ -212,8 +221,27 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
 
       const results = await Promise.all(
         selectedNFTs.map(async (tokenId) => {
+          const nft = nfts.find((nft) => nft.token_id === tokenId);
+
+          // If NFT is not found, you can handle it here
+          // if (!nft) {
+          //   toast.error(`NFT with token ID ${tokenId} not found.`);
+          //   throw new Error(`NFT with token ID ${tokenId} not found.`);
+          // }
+
+          const attributes = nft?.attributes || [];
+
+          const referenceBlob = { attributes };
+
+          const msg = JSON.stringify({ reference_blob: referenceBlob });
+
           try {
-            const result = await transferNft(tokenId, receiverId, senderId);
+            const result = await transferNft(
+              tokenId,
+              receiverId,
+              senderId,
+              msg
+            );
             console.log(`NFT ${tokenId} staked successfully:`, result);
             return result;
           } catch (error) {
@@ -227,7 +255,6 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
       toast.success("All selected NFTs staked successfully!");
     } catch (error) {
       console.error("Error staking NFTs:", error);
-      toast.error("Staking failed. Please try again.");
     }
   };
 
@@ -379,8 +406,7 @@ export const StakeSection: React.FC<StakeSectionProps> = ({
 
   const handleRangeClick = (clickedPercentage: number) => {
     const newAmount = (clickedPercentage / 100) * rawBalance;
-    const formattedAmount = newAmount
-      .toFixed(2)
+    const formattedAmount = newAmount.toFixed(2);
     setAmount(formattedAmount);
     setPercentage(clickedPercentage);
   };
