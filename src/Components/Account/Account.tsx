@@ -18,6 +18,7 @@ import { useUnstakeNfts } from "@/hooks/useUnstakeNft";
 import { useRewardDistribution } from "@/hooks/getNextRewardDistribution";
 import { useSearchParams } from "next/navigation";
 import { useUserRewards } from "@/hooks/viewTokens";
+import { useCalculateCurrentAPR } from "@/hooks/CalculateAPR";
 
 interface StakingInfo {
   staked_tokens: string;
@@ -243,17 +244,17 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
     console.log("end ", lockupEndTime);
 
     // Check if the lockup period is completed
-    // if (currentTime < lockupEndTime) {
-    //   const unlockDate = new Date(lockupEndTime).toLocaleDateString("en-GB", {
-    //     day: "2-digit",
-    //     month: "short",
-    //     year: "numeric",
-    //   });
-    //   toast.error(
-    //     `Lockup period not completed. You can unstake your tokens after ${unlockDate}.`
-    //   );
-    //   return;
-    // }
+    if (currentTime < lockupEndTime) {
+      const unlockDate = new Date(lockupEndTime).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+      toast.error(
+        `Lockup period not completed. You can unstake your tokens after ${unlockDate}.`
+      );
+      return;
+    }
 
     // If lockup period is completed and tokenReward is 0
     if (nftReward === 0) {
@@ -279,8 +280,25 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
     wallet,
     SIN_STAKING_CONTRACT_TOKEN_STAKE
   );
+  const { currentAPR, fetchCurrentAPR } = useCalculateCurrentAPR(
+    wallet,
+    SIN_STAKING_CONTRACT_TOKEN_STAKE
+  );
+  useEffect(() => {
+    if (wallet) {
+      fetchCurrentAPR();
+    }
+  }, [wallet]);
+  const formattedAPR = currentAPR ? parseFloat(currentAPR).toFixed(2) : "0.00";
+  const totalStakedTokens = userRewards?.total_staked_tokens || 0;
+  const formattedStakedTokens = parseFloat(
+    formatYoctoAmount(totalStakedTokens)
+  );
 
-  // Call the hook with a specific staker ID
+  const aprPerToken = formattedStakedTokens
+    ? (parseFloat(formattedAPR) / formattedStakedTokens).toFixed(2) // You can adjust decimal places
+    : "0.00";
+
   useEffect(() => {
     if (wallet && signedAccountId) {
       fetchUserRewards(signedAccountId);
@@ -368,7 +386,7 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
             {activeTable === "tokens" && (
               <div>
                 {userRewards?.total_staked_tokens && (
-                  <div className="hidden md:flex justify-between text-yellow-700 text-xs md:text-sm mb-4">
+                  <div className="hidden md:flex justify-between text-yellow-700 text-xs md:text-sm mb-4 space-x-8">
                     <div className="flex flex-row mb-4">
                       <span className="font-semibold">
                         Total Staked Tokens:{" "}
@@ -399,10 +417,18 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                         )}
                       </span>
                     </div>
+                    <div className="flex flex-row">
+                      <span className="font-semibold">
+                        Expected Total Rewards:
+                      </span>
+                      <span className="text-yellow-400 ml-2">
+                        {aprPerToken}
+                      </span>
+                    </div>
                   </div>
                 )}
                 {userRewards?.total_staked_tokens && (
-                  <div className="flex flex-row md:hidden items-center text-yellow-700 text-xs mb-4 gap-4">
+                  <div className="flex flex-row md:hidden items-center justify-center text-yellow-700 text-xs mb-4 gap-1">
                     <div className="flex flex-col items-center">
                       <span className="font-semibold">Staked</span>
                       <span className="text-yellow-400 ">
@@ -411,29 +437,28 @@ export const NFTStakeSection: React.FC<NFTStakeSectionProps> = ({
                         )}
                       </span>
                     </div>
-                    <img
-                      src="/images/vertical.png"
-                      className="w-4 h-auto mx-2"
-                    />
+                    <img src="/images/vertical.png" className="w-4 h-auto" />
                     <div className="flex flex-col items-center">
                       <span className="font-semibold">Claimed</span>
-                      <span className="text-yellow-400 ml-2">
+                      <span className="text-yellow-400">
                         {formatYoctoAmount(
                           userRewards?.total_claimed_rewards.toString()
                         )}
                       </span>
                     </div>
-                    <img
-                      src="/images/vertical.png"
-                      className="w-4 h-auto mx-2"
-                    />
+                    <img src="/images/vertical.png" className="w-4 h-auto" />
                     <div className="flex flex-col items-center">
                       <span className="font-semibold">Unclaimed</span>
-                      <span className="text-yellow-400 ml-2">
+                      <span className="text-yellow-400">
                         {formatYoctoAmount(
                           userRewards?.total_unclaimed_rewards.toString()
                         )}
                       </span>
+                    </div>
+                    <img src="/images/vertical.png" className="w-4 h-auto" />
+                    <div className="flex flex-col items-center">
+                      <span className="font-semibold">Rewards</span>
+                      <span className="text-yellow-400">{aprPerToken}</span>
                     </div>
                   </div>
                 )}
